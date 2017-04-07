@@ -30,13 +30,17 @@ namespace  ether {
 		explicit BigInt(char const* num);
 		explicit BigInt(const std::string num);
 		explicit BigInt(const BigInt &other);
-		//explicit BigInt(size_t num);
+		explicit BigInt(size_t num);
 		explicit BigInt(BigInt &&other);
 
 		uint_least32_t* values_t;
+		Magnitude signal = Magnitude::UNSIGNED;
 
 		const char* toString();
 		size_t getNumNodes() const;
+		size_t lenght() const;
+		size_t size() const;
+		bool is_sinalized();
 
 		friend bool operator==(const BigInt& lhs, const BigInt& rhs) {
 			if (lhs.getNumNodes() != rhs.getNumNodes()) {
@@ -120,17 +124,17 @@ namespace  ether {
 
 	private:
 		
-		size_t _bits = 0;
+		size_t _size = 0;
 		size_t _nodes = 0;
-		unsigned char _sign = Magnitude::UNSIGNED;
+		
 		bool _empty = true;
 
 		const int _archbits = 9;
 	};
 
 	BigInt::BigInt() {
-		this->_bits = 1; //Only '0'
-		this->_sign = Magnitude::UNSIGNED;
+		this->_size = 1; //Only '0'
+		this->signal = Magnitude::UNSIGNED;
 		this->_nodes = 1;
 		this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
 		this->values_t[0] = 0;
@@ -139,15 +143,15 @@ namespace  ether {
 	inline BigInt::BigInt(char const * num)
 	{
 		if (num[0] == static_cast<char>(Magnitude::SIGNED)) {
-			this->_sign = Magnitude::SIGNED;
-			for (this->_bits = 1; num[this->_bits] != '\0'; this->_bits++);
+			this->signal = Magnitude::SIGNED;
+			for (this->_size = 1; num[this->_size] != '\0'; this->_size++);
 		}
 		else {
-			this->_sign = Magnitude::UNSIGNED;
-			for (this->_bits = 0; num[this->_bits] != '\0'; this->_bits++);
+			this->signal = Magnitude::UNSIGNED;
+			for (this->_size = 0; num[this->_size] != '\0'; this->_size++);
 		}
 		
-		this->_nodes = static_cast<size_t>(ceil(static_cast<double>(this->_bits) / static_cast<double>(this->_archbits)));
+		this->_nodes = static_cast<size_t>(ceil(static_cast<double>(this->_size) / static_cast<double>(this->_archbits)));
 		//if (this->_nodes <= 0) {
 		//	this->_nodes = 1;
 		//}
@@ -157,12 +161,12 @@ namespace  ether {
 		size_t i, j;
 		for (i = s.size(), j = this->_nodes - 1; i >= this->_archbits && j >= 0; i -= this->_archbits, j--)
 		{
-			this->values_t[j] = stoi(s.substr(i - this->_archbits, this->_archbits));
+			this->values_t[j] = std::stoi(s.substr(i - this->_archbits, this->_archbits));
 		}
 
 		size_t v = s.size() % this->_archbits;
 		if (v) {
-			this->values_t[j] = stoi(s.substr(0, v));
+			this->values_t[j] = std::stoi(s.substr(0, v));
 		}
 		this->_empty = false;
 	}
@@ -170,44 +174,56 @@ namespace  ether {
 	inline BigInt::BigInt(const std::string num)
 	{
 		if (num[0] == static_cast<char>(Magnitude::SIGNED)) {
-			this->_sign = Magnitude::SIGNED;
-			for (this->_bits = 1; num[this->_bits] != '\0'; this->_bits++);
+			this->signal = Magnitude::SIGNED;
+			this->_size = num.size() - 1;
 		}
 		else {
-			this->_sign = Magnitude::UNSIGNED;
-			for (this->_bits = 0; num[this->_bits] != '\0'; this->_bits++);
+			this->signal = Magnitude::UNSIGNED;
+			this->_size = num.size();
 		}
 
-		this->_nodes = static_cast<size_t>(ceil(static_cast<double>(this->_bits) / static_cast<double>(this->_archbits)));
+		this->_nodes = static_cast<size_t>(ceil(static_cast<double>(this->_size) / static_cast<double>(this->_archbits)));
 		//if (this->_nodes <= 0) {
 		//	this->_nodes = 1;
 		//}
 
-		this->values_t = (uint_least32_t *)calloc(this->_nodes, sizeof(uint_least32_t));
-		std::string s(num);
+		this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
 		size_t i, j;
-		for (i = s.size(), j = this->_nodes - 1; i >= this->_archbits && j >= 0; i -= this->_archbits, j--)
+		for (i = num.size(), j = this->_nodes - 1; i >= this->_archbits && j >= 0; i -= this->_archbits, j--)
 		{
-			this->values_t[j] = stoi(s.substr(i - this->_archbits, this->_archbits));
+			this->values_t[j] = std::stoi(num.substr(i - this->_archbits, this->_archbits));
 		}
 
-		size_t v = s.size() % this->_archbits;
+		size_t v = num.size() % this->_archbits;
 		if (v) {
-			this->values_t[j] = stoi(s.substr(0, v));
+			this->values_t[j] = std::stoi(num.substr(0, v));
 		}
 		this->_empty = false;
 	}
 
-	inline BigInt::BigInt(const BigInt & other)
+	inline BigInt::BigInt(const BigInt &other)
 	{
+		this->_size = other.lenght();
+		this->signal = other.signal;
+		this->_nodes = other.getNumNodes();
+		this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+		for (size_t i = 0; i < this->_size; i++)	{
+			this->values_t[i] = other.values_t[i];
+		}
 	}
 
-	//inline BigInt::BigInt(int * num)
-	//{
-	//}
-
-	inline BigInt::BigInt(BigInt && other)
+	inline BigInt::BigInt(size_t num)
 	{
+
+	}
+
+	inline BigInt::BigInt(BigInt &&other)
+	{
+		this->_size = 1; //Only '0'
+		this->signal = Magnitude::UNSIGNED;
+		this->_nodes = 1;
+		this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+		this->values_t[0] = 0;
 	}
 
 	inline const char *BigInt::toString()
@@ -243,9 +259,23 @@ namespace  ether {
 		return this->_nodes;
 	}
 
+	inline size_t BigInt::lenght() const
+	{
+		return this->_size;
+	}
+
+	inline size_t BigInt::size() const
+	{
+		return this->_size;
+	}
+
+	inline bool BigInt::is_sinalized()
+	{
+		return  (this->signal == Magnitude::SIGNED);
+	}
+
 	inline BigInt::~BigInt()
 	{
 	}
-
 }
 #endif
