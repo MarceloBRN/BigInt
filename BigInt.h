@@ -11,10 +11,17 @@
 
 #pragma once
 
-#define BIGINT(A) #A
+//#define BIGINT(A) #A
+#define BIGINT(A) ether::BigInt(#A)
 
 #define LIMITS_NUM 999999999
 #define LIMITS_MAX 1000000000
+
+#define DOUBLE_LIMITS_NUM 999999999999999999
+#define DOUBLE_LIMITS_MAX 1000000000000000000
+
+#define SIZE_LIMITS_NUM 9
+#define SIZE_DOUBLE_LIMITS_NUM 18
 
 namespace  ether {
 
@@ -28,19 +35,23 @@ namespace  ether {
 	public:
 		explicit BigInt();
 		explicit BigInt(char const* num);
-		explicit BigInt(const std::string num);
+		explicit BigInt(const std::string &num);
 		explicit BigInt(const BigInt &other);
-		explicit BigInt(size_t num);
+		explicit BigInt(unsigned int num);
+		explicit BigInt(int num);
+		explicit BigInt(unsigned long long num);
+		explicit BigInt(long long num);
 		explicit BigInt(BigInt &&other);
 
 		uint_least32_t* values_t;
 		Magnitude signal = Magnitude::UNSIGNED;
 
-		const char* toString();
+		std::string toString();
 		size_t getNumNodes() const;
 		size_t lenght() const;
 		size_t size() const;
 		bool is_sinalized();
+		bool is_empty();
 
 		friend bool operator==(const BigInt& lhs, const BigInt& rhs) {
 			if (lhs.getNumNodes() != rhs.getNumNodes()) {
@@ -55,13 +66,14 @@ namespace  ether {
 			}
 			return true; 
 		}
-		//friend bool operator==(int& lhs, const BigInt& rhs) {
-		//	return true;
-		//}
 
-		//friend bool operator==(const BigInt& lhs, int& rhs) {
-		//	return true;
-		//}
+		friend bool operator==(int& lhs, const BigInt& rhs) {
+			return ether::BigInt(lhs) == rhs;
+		}
+
+		friend bool operator==(const BigInt& lhs, int& rhs) {
+			return lhs == ether::BigInt(rhs);
+		}
 
 		friend bool operator!=(const BigInt& lhs, const BigInt& rhs) { 
 			if (lhs.getNumNodes() == rhs.getNumNodes()) {
@@ -77,13 +89,13 @@ namespace  ether {
 			return true;
 		}
 
-		//friend bool operator!=(int& lhs, const BigInt& rhs) {
-		//	return true;
-		//}
+		friend bool operator!=(int& lhs, const BigInt& rhs) {
+			return ether::BigInt(lhs) != rhs;
+		}
 
-		//friend bool operator!=(const BigInt& lhs, int& rhs) {
-		//	return true;
-		//}
+		friend bool operator!=(const BigInt& lhs, int& rhs) {
+			return lhs != ether::BigInt(rhs);
+		}
 
 		friend bool operator<(const BigInt& lhs, const BigInt& rhs) { 
 			if (lhs.getNumNodes() > rhs.getNumNodes()) {
@@ -126,8 +138,6 @@ namespace  ether {
 		
 		size_t _size = 0;
 		size_t _nodes = 0;
-		
-		bool _empty = true;
 
 		const int _archbits = 9;
 	};
@@ -166,12 +176,16 @@ namespace  ether {
 
 		size_t v = s.size() % this->_archbits;
 		if (v) {
-			this->values_t[j] = std::stoi(s.substr(0, v));
+			if (this->signal == Magnitude::SIGNED) {
+				this->values_t[j] = std::stoi(s.substr(1, v));
+			}
+			else {
+				this->values_t[j] = std::stoi(s.substr(0, v));
+			}
 		}
-		this->_empty = false;
 	}
 
-	inline BigInt::BigInt(const std::string num)
+	inline BigInt::BigInt(const std::string &num)
 	{
 		if (num[0] == static_cast<char>(Magnitude::SIGNED)) {
 			this->signal = Magnitude::SIGNED;
@@ -183,9 +197,6 @@ namespace  ether {
 		}
 
 		this->_nodes = static_cast<size_t>(ceil(static_cast<double>(this->_size) / static_cast<double>(this->_archbits)));
-		//if (this->_nodes <= 0) {
-		//	this->_nodes = 1;
-		//}
 
 		this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
 		size_t i, j;
@@ -198,7 +209,6 @@ namespace  ether {
 		if (v) {
 			this->values_t[j] = std::stoi(num.substr(0, v));
 		}
-		this->_empty = false;
 	}
 
 	inline BigInt::BigInt(const BigInt &other)
@@ -212,43 +222,144 @@ namespace  ether {
 		}
 	}
 
-	inline BigInt::BigInt(size_t num)
+	inline BigInt::BigInt(unsigned int num)
 	{
+		std::string str = std::to_string(num);
+		this->_size = str.size();
+		this->signal = Magnitude::UNSIGNED;
+		this->_nodes = 1;
+		this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+		this->values_t[0] = num;
+	}
 
+	inline BigInt::BigInt(int num)
+	{
+		std::string str = std::to_string(num);
+		if (num >= 0) {
+			this->_size = str.size();
+			this->signal = Magnitude::UNSIGNED;
+			this->_nodes = 1;
+			this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+			this->values_t[0] = num;
+		} else {
+			this->_size = str.size() - 1;
+			this->signal = Magnitude::SIGNED;
+			this->_nodes = 1;
+			this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+			this->values_t[0] = num*(-1);
+		}
+	}
+
+	inline BigInt::BigInt(unsigned long long num)
+	{
+		std::string str = std::to_string(num);
+		if (str.size() > SIZE_DOUBLE_LIMITS_NUM) {
+			this->_size = str.size();
+			this->signal = Magnitude::UNSIGNED;
+			this->_nodes = 3;
+			this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+			size_t idx = str.size() - SIZE_DOUBLE_LIMITS_NUM;
+			this->values_t[0] = std::stoul(str.substr(0, idx));
+			this->values_t[1] = std::stoul(str.substr(idx, SIZE_LIMITS_NUM));
+			this->values_t[2] = std::stoul(str.substr(idx + SIZE_LIMITS_NUM, SIZE_LIMITS_NUM));
+		}
+		else if (str.size() > SIZE_LIMITS_NUM) {
+			this->_size = str.size();
+			this->signal = Magnitude::UNSIGNED;
+			this->_nodes = 2;
+			this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+			size_t idx = str.size() - SIZE_LIMITS_NUM;
+			this->values_t[0] = std::stoul(str.substr(0, idx));
+			this->values_t[1] = std::stoul(str.substr(idx, SIZE_LIMITS_NUM));
+		}
+		else {
+			this->_size = str.size();
+			this->signal = Magnitude::UNSIGNED;
+			this->_nodes = 1;
+			this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+			this->values_t[0] = std::stoul(str);
+		}
+	}
+
+	inline BigInt::BigInt(long long num)
+	{
+		std::string str = std::to_string(num);
+		if (str.size() > SIZE_DOUBLE_LIMITS_NUM) {
+			this->_nodes = 3;
+			this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+			if (str[0] == Magnitude::SIGNED) {
+				this->_size = str.size() - 1;
+				this->signal = Magnitude::SIGNED;
+				size_t idx = str.size() - SIZE_DOUBLE_LIMITS_NUM;
+				this->values_t[0] = std::stoul(str.substr(1, idx));
+				this->values_t[1] = std::stoul(str.substr(idx, SIZE_LIMITS_NUM));
+				this->values_t[2] = std::stoul(str.substr(idx + SIZE_LIMITS_NUM, SIZE_LIMITS_NUM));
+			}
+			else
+			{
+				this->_size = str.size();
+				this->signal = Magnitude::UNSIGNED;
+				size_t idx = str.size() - SIZE_DOUBLE_LIMITS_NUM;
+				this->values_t[0] = std::stoul(str.substr(0, idx));
+				this->values_t[1] = std::stoul(str.substr(idx, SIZE_LIMITS_NUM));
+				this->values_t[2] = std::stoul(str.substr(idx + SIZE_LIMITS_NUM, SIZE_LIMITS_NUM));
+			}
+			
+			
+			
+		}
+		else if (str.size() > SIZE_LIMITS_NUM) {
+			this->_size = str.size();
+			this->signal = Magnitude::SIGNED;
+			this->_nodes = 2;
+			this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+			size_t idx = str.size() - SIZE_LIMITS_NUM;
+			this->values_t[0] = std::stoul(str.substr(1, idx));
+			this->values_t[1] = std::stoul(str.substr(idx, SIZE_LIMITS_NUM));
+		}
+		else {
+			this->_size = str.size();
+			this->signal = Magnitude::SIGNED;
+			this->_nodes = 1;
+			this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
+			this->values_t[0] = std::stoul(str);
+		}
 	}
 
 	inline BigInt::BigInt(BigInt &&other)
 	{
-		this->_size = 1; //Only '0'
-		this->signal = Magnitude::UNSIGNED;
-		this->_nodes = 1;
+		this->_size = other.lenght();
+		this->signal = other.signal;
+		this->_nodes = other.getNumNodes();
 		this->values_t = new uint_least32_t[this->_nodes * sizeof(uint_least32_t)];
-		this->values_t[0] = 0;
+		for (size_t i = 0; i < this->_size; i++) {
+			this->values_t[i] = other.values_t[i];
+		}
 	}
 
-	inline const char *BigInt::toString()
+	inline std::string BigInt::toString()
 	{
-		static std::string s = std::to_string(this->values_t[0]);
+		std::string s = std::to_string(this->values_t[0]);
 		std::stringstream stream;
 		bool first_node = true;
-		if (!this->_empty) {
+		if (!this->is_empty()) {
 			for (size_t i = 0; i < this->_nodes; i++)
 			{
-				if (this->values_t[i] > 0) {
+				//if (this->values_t[i] >= 0) {
 					if (first_node) {
-						size_t v = s.size() % this->_archbits;
-						stream.width(v * sizeof(char));
-						stream << std::right << this->values_t[i];
+						if (this->is_sinalized()) {
+							stream << '-';
+						}
+						stream << this->values_t[i];
 						first_node = false;
 					}
 					else {
-						stream.fill('0');
 						stream.width(this->_archbits * sizeof(char));
-						stream << std::right << this->values_t[i];
+						stream.fill('0');
+						stream << this->values_t[i];
 					}
-				}
+				//}
 			}
-
 			s = stream.str();		
 		}
 		return s.data();
@@ -272,6 +383,11 @@ namespace  ether {
 	inline bool BigInt::is_sinalized()
 	{
 		return  (this->signal == Magnitude::SIGNED);
+	}
+
+	inline bool BigInt::is_empty()
+	{
+		return (this->_nodes == 0);
 	}
 
 	inline BigInt::~BigInt()
