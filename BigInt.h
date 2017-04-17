@@ -28,7 +28,7 @@ namespace  integer {
 
 	class BigInt
 	{
-		
+
 
 	public:
 		BigInt();
@@ -44,7 +44,7 @@ namespace  integer {
 		BigInt(BigInt &&other);
 
 		uint_least32_t* values_t;
-		
+
 		std::string toString() const;
 		size_t getNumNodes() const;
 		size_t lenght() const;
@@ -54,6 +54,7 @@ namespace  integer {
 
 
 		BigInt& operator=(const BigInt& b);
+		BigInt& operator=(const std::string &num);
 
 		//comparison operators
 		friend bool operator==(const BigInt& lhs, const BigInt& rhs);
@@ -71,22 +72,25 @@ namespace  integer {
 		friend BigInt operator+(const BigInt& a, const BigInt& b);
 		friend BigInt operator-(const BigInt& a, const BigInt& b);
 		friend BigInt operator*(const BigInt& a, const BigInt& b);
+		friend BigInt operator*(const BigInt& a, unsigned long& b);
 		friend BigInt operator/(const BigInt& a, const BigInt& b);
 		friend BigInt operator%(const BigInt& a, const BigInt& b);
 		friend BigInt operator~(const BigInt& a);
 		friend BigInt operator&(const BigInt& a, const BigInt& b);
 		friend BigInt operator|(const BigInt& a, const BigInt& b);
 		friend BigInt operator^(const BigInt& a, const BigInt& b);
+		friend BigInt operator<<(const BigInt &a, size_t b);
+		friend BigInt operator>>(const BigInt &a, size_t b);
 
 		//assignment operators
 		friend BigInt& operator+=(BigInt& a, const BigInt& b);
 		friend BigInt& operator-=(BigInt& a, const BigInt& b);
-		friend BigInt& operator *=(BigInt& a, const BigInt& b);
-		friend BigInt& operator /=(BigInt& a, const BigInt& b);
-		friend BigInt& operator %=(BigInt& a, const BigInt& b);
-		friend BigInt& operator &=(BigInt& a, const BigInt& b);
-		friend BigInt& operator |=(BigInt& a, const BigInt& b);
-		friend BigInt& operator ^=(BigInt& a, const BigInt& b);
+		friend BigInt& operator*=(BigInt& a, const BigInt& b);
+		friend BigInt& operator/=(BigInt& a, const BigInt& b);
+		friend BigInt& operator%=(BigInt& a, const BigInt& b);
+		friend BigInt& operator&=(BigInt& a, const BigInt& b);
+		friend BigInt& operator|=(BigInt& a, const BigInt& b);
+		friend BigInt& operator^=(BigInt& a, const BigInt& b);
 
 		//increment / decrement operators
 		friend BigInt& operator++(BigInt& a);
@@ -95,12 +99,12 @@ namespace  integer {
 		friend BigInt operator--(BigInt& a, int);
 
 		virtual ~BigInt();
-		
+
 		Magnitude signal = Magnitude::UNSIGNED;
 		size_t nodes = 0;
 
 	private:
-		
+
 		BigInt(uint_least32_t *values_t, Magnitude signal, size_t numnodes);
 		const size_t _archbits = 9;
 
@@ -123,7 +127,7 @@ namespace  integer {
 		else {
 			this->signal = Magnitude::UNSIGNED;
 		}
-		
+
 		this->nodes = static_cast<size_t>(ceil(static_cast<double>(size) / static_cast<double>(this->_archbits)));
 
 		this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
@@ -183,7 +187,7 @@ namespace  integer {
 		this->nodes = other.getNumNodes();
 		//std::cout << other.toString() << std::endl;
 		this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
-		for (size_t i = 0; i < this->nodes; i++)	{
+		for (size_t i = 0; i < this->nodes; i++) {
 			this->values_t[i] = other.values_t[i];
 		}
 	}
@@ -205,7 +209,8 @@ namespace  integer {
 			this->nodes = 1;
 			this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
 			this->values_t[0] = num;
-		} else {
+		}
+		else {
 			this->signal = Magnitude::SIGNED;
 			this->nodes = 1;
 			this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
@@ -261,7 +266,7 @@ namespace  integer {
 				this->values_t[2] = std::stoul(str.substr(0, idx));
 				this->values_t[1] = std::stoul(str.substr(idx, SIZE_LIMITS_NUM));
 				this->values_t[0] = std::stoul(str.substr(idx + SIZE_LIMITS_NUM, SIZE_LIMITS_NUM));
-			}			
+			}
 		}
 		else if (str.size() > SIZE_LIMITS_NUM) {
 			this->signal = Magnitude::SIGNED;
@@ -356,15 +361,25 @@ namespace  integer {
 		return this->nodes;
 	}
 
-	//inline size_t BigInt::lenght() const
-	//{
-	//	return this->_size;
-	//}
+	inline size_t BigInt::lenght() const
+	{
+		std::string r;
+		r = this->toString();
+		if (r[0] != Magnitude::SIGNED) {
+			return r.size() - 1;
+		}
+		return r.size();
+	}
 
-	//inline size_t BigInt::size() const
-	//{
-	//	return this->_size;
-	//}
+	inline size_t BigInt::size() const
+	{
+		std::string r;
+		r = this->toString();
+		if (r[0] != Magnitude::SIGNED) {
+			return r.size();
+		}
+		return r.size() - 1;
+	}
 
 	inline bool BigInt::is_sinalized()
 	{
@@ -389,95 +404,109 @@ namespace  integer {
 		return *this;
 	}
 
-	//bool integer::operator==(const BigInt & lhs, const BigInt & rhs)
-	//{
-	//	if (lhs.getNumNodes() != rhs.getNumNodes()) {
-	//		return false;
-	//	}
-	//	else {
-	//		for (size_t i = 0; i < lhs.getNumNodes(); i++) {
-	//			if (lhs.values_t[i] != rhs.values_t[i]) {
-	//				return false;
-	//			}
-	//		}
-	//	}
-	//	return true;
-	//}
+	inline BigInt & BigInt::operator=(const std::string & num)
+	{
+		BigInt b(num);
+		this->nodes = b.nodes;
+		this->signal = b.signal;
+		delete[] this->values_t;
+		this->values_t = &b.values_t[0];
+		//this->values_t = new uint_least32_t[this->nodes];
+		//for (size_t i = 0; i < b.nodes; i++) {
+		//	this->values_t[i] = b.values_t[i];
+		//}
+		return *this;
+	}
 
-	//bool integer::operator==(int & lhs, const BigInt & rhs)
-	//{
-	//	return integer::BigInt(lhs) == rhs;
-	//}
+	bool operator==(const BigInt & lhs, const BigInt & rhs)
+	{
+		if (lhs.getNumNodes() != rhs.getNumNodes()) {
+			return false;
+		}
+		else {
+			for (size_t i = 0; i < lhs.getNumNodes(); i++) {
+				if (lhs.values_t[i] != rhs.values_t[i]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
-	//bool integer::operator==(const BigInt & lhs, int & rhs)
-	//{
-	//	return lhs == integer::BigInt(rhs);
-	//}
+	bool operator==(int & lhs, const BigInt & rhs)
+	{
+		return integer::BigInt(lhs) == rhs;
+	}
 
-	//bool integer::operator!=(const BigInt & lhs, const BigInt & rhs)
-	//{
-	//	if (lhs.getNumNodes() == rhs.getNumNodes()) {
-	//		return false;
-	//	}
-	//	else {
-	//		for (size_t i = 0; i < lhs.getNumNodes(); i++) {
-	//			if (lhs.values_t[i] == rhs.values_t[i]) {
-	//				return false;
-	//			}
-	//		}
-	//	}
-	//	return true;
-	//}
+	bool operator==(const BigInt & lhs, int & rhs)
+	{
+		return lhs == integer::BigInt(rhs);
+	}
 
-	//bool integer::operator!=(int & lhs, const BigInt & rhs)
-	//{
-	//	return integer::BigInt(lhs) != rhs;
-	//}
+	bool operator!=(const BigInt & lhs, const BigInt & rhs)
+	{
+		if (lhs.getNumNodes() == rhs.getNumNodes()) {
+			return false;
+		}
+		else {
+			for (size_t i = 0; i < lhs.getNumNodes(); i++) {
+				if (lhs.values_t[i] == rhs.values_t[i]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
-	//bool integer::operator!=(const BigInt & lhs, int & rhs)
-	//{
-	//	return lhs != integer::BigInt(rhs);
-	//}
+	bool operator!=(int & lhs, const BigInt & rhs)
+	{
+		return integer::BigInt(lhs) != rhs;
+	}
 
-	//bool integer::operator<(const BigInt & lhs, const BigInt & rhs)
-	//{
-	//	if (lhs.getNumNodes() > rhs.getNumNodes()) {
-	//		return false;
-	//	}
-	//	else if (lhs.getNumNodes() == rhs.getNumNodes()) {
-	//		for (size_t i = 0; i < lhs.getNumNodes(); i++) {
-	//			if (lhs.values_t[i] > rhs.values_t[i]) {
-	//				return false;
-	//			}
-	//		}
-	//	}
-	//	return true;
-	//}
+	bool operator!=(const BigInt & lhs, int & rhs)
+	{
+		return lhs != integer::BigInt(rhs);
+	}
 
-	//bool integer::operator>(const BigInt & lhs, const BigInt & rhs)
-	//{
-	//	if (lhs.getNumNodes() < rhs.getNumNodes()) {
-	//		return false;
-	//	}
-	//	else if (lhs.getNumNodes() == rhs.getNumNodes()) {
-	//		for (size_t i = 0; i < lhs.getNumNodes(); i++) {
-	//			if (lhs.values_t[i] < rhs.values_t[i]) {
-	//				return false;
-	//			}
-	//		}
-	//	}
-	//	return true;
-	//}
+	bool operator<(const BigInt & lhs, const BigInt & rhs)
+	{
+		if (lhs.getNumNodes() > rhs.getNumNodes()) {
+			return false;
+		}
+		else if (lhs.getNumNodes() == rhs.getNumNodes()) {
+			for (size_t i = 0; i < lhs.getNumNodes(); i++) {
+				if (lhs.values_t[i] > rhs.values_t[i]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
-	//bool integer::operator<=(const BigInt & lhs, const BigInt & rhs)
-	//{
-	//	return (lhs < rhs) || (lhs == rhs);
-	//}
+	bool operator>(const BigInt & lhs, const BigInt & rhs)
+	{
+		if (lhs.nodes < rhs.nodes) {
+			return false;
+		}
+		else if (lhs.nodes == rhs.nodes) {
+			for (size_t i = 0; i < lhs.nodes; i++) {
+				if (lhs.values_t[i] <= rhs.values_t[i]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
-	//bool integer::operator>=(const BigInt & lhs, const BigInt & rhs)
-	//{
-	//	return (lhs > rhs) || (lhs == rhs);
-	//}
+	bool operator<=(const BigInt & lhs, const BigInt & rhs)
+	{
+		return (lhs < rhs) || (lhs == rhs);
+	}
+
+	bool operator>=(const BigInt & lhs, const BigInt & rhs)
+	{
+		return (lhs > rhs) || (lhs == rhs);
+	}
 
 	BigInt operator+(const BigInt &a, const BigInt &b)
 	{
@@ -490,8 +519,7 @@ namespace  integer {
 		if (a.nodes >= b.nodes) {
 			maxbits = a.nodes;
 			r = new uint_least32_t[maxbits];
-			size_t i = 0;
-			for (i = 0; i < maxbits; i++) {
+			for (size_t i = 0; i < maxbits; i++) {
 				if (i < b.nodes) {
 					sum = a.values_t[i] + b.values_t[i] + carry;
 					if (sum > LIMITS_NUM) {
@@ -570,7 +598,273 @@ namespace  integer {
 		return integer::BigInt(r, integer::Magnitude::UNSIGNED, maxbits);
 	}
 
-	inline BigInt::~BigInt(){
+	BigInt operator-(const BigInt & a, const BigInt & b)
+	{
+		uint_least32_t carry = 0;
+		uint_least32_t sum = 0;
+		uint_least32_t sub = 0;
+		size_t maxbits = 0;
+		//char *strsum;
+		uint_least32_t *r = nullptr;
+
+		if (a.nodes >= b.nodes) {
+			maxbits = a.nodes;
+			r = new uint_least32_t[maxbits];
+			for (size_t i = 0; i < maxbits; i++) {
+				if (i < b.nodes) {
+					sum = b.values_t[i] + carry;
+					if (a.values_t[i] >= sum) {
+						r[i] = a.values_t[i] - sum;
+						carry = 0;
+					}
+					else {
+						r[i] = a.values_t[i] + LIMITS_MAX - sum;
+						carry = 1;
+					}
+				}
+				else {
+					if (carry == 0) {
+						r[i] = a.values_t[i];
+					}
+					else {
+						r[i] = a.values_t[i] - carry;
+						carry = 0;
+					}
+				}
+			}
+		}
+		else {
+			maxbits = b.nodes;
+			r = new uint_least32_t[maxbits];
+			for (size_t i = 0; i < maxbits; i++) {
+				if (i < a.nodes) {
+					sum = a.values_t[i] + carry;
+					if (b.values_t[i] >= sum) {
+						r[i] = b.values_t[i] - sum;
+						carry = 0;
+					}
+					else {
+						r[i] = b.values_t[i] + LIMITS_MAX - sum;
+						carry = 1;
+					}
+				}
+				else {
+					if (carry == 0) {
+						r[i] = b.values_t[i];
+					}
+					else {
+						r[i] = a.values_t[i] - carry;
+						carry = 0;
+					}
+				}
+			}
+		}
+		sum = 0;
+
+		if (r[maxbits - 1] == 0 && maxbits > 1) {
+			maxbits--;
+			r = (uint_least32_t *)realloc(r, maxbits * sizeof(uint_least32_t));
+			if (!r) {
+				exit(-1);
+			}
+		}
+
+		return integer::BigInt(r, integer::Magnitude::UNSIGNED, maxbits);
+	}
+
+	BigInt operator*(const BigInt & a, const BigInt & b)
+	{
+		uint_least64_t value;
+		uint_least64_t carry = 0;
+
+		size_t maxbits;
+		maxbits = a.nodes + b.nodes;
+		uint_least32_t *r = (uint_least32_t *)calloc(maxbits, sizeof(uint_least32_t));
+
+		size_t i = 0, j = 0;
+		for (i = 0; i < b.nodes; i++) {
+			carry = 0;
+			for (j = i; j < (a.nodes + i); j++) {
+				value = a.values_t[j] * (static_cast<uint_least64_t>(b.values_t[i])) + carry + r[j];
+				carry = value / LIMITS_MAX;
+				r[j] = static_cast<uint_least32_t>(value - (carry)*LIMITS_MAX);
+			}
+		}
+
+		r[maxbits - 1] = static_cast<uint_least32_t>(carry);
+		if (r[maxbits - 1] == 0) {
+			maxbits--;
+			r = (uint_least32_t *)realloc(r, maxbits * sizeof(uint_least32_t));
+			if (!r) {
+				exit(-1);
+			}
+		}
+
+		return integer::BigInt(r, integer::Magnitude::UNSIGNED, maxbits);
+	}
+
+	BigInt operator*(const BigInt & a, unsigned long & b)
+	{
+		uint_least64_t value;
+		uint_least64_t carry = 0;
+
+		size_t maxbits;
+		maxbits = a.nodes + 1;
+		uint_least32_t *r = (uint_least32_t *)calloc(maxbits, sizeof(uint_least32_t));
+
+		size_t i = 0, j = 0;
+		carry = 0;
+		for (j = 0; j < a.nodes; j++) {
+			value = a.values_t[j] * (static_cast<uint_least64_t>(b)) + carry + r[j];
+			carry = value / LIMITS_MAX;
+			r[j] = static_cast<uint_least32_t>(value - (carry)*LIMITS_MAX);
+		}
+
+		r[maxbits - 1] = static_cast<uint_least32_t>(carry);
+		if (r[maxbits - 1] == 0) {
+			maxbits--;
+			r = (uint_least32_t *)realloc(r, maxbits * sizeof(uint_least32_t));
+			if (!r) {
+				exit(-1);
+			}
+		}
+
+		return integer::BigInt(r, integer::Magnitude::UNSIGNED, maxbits);
+	}
+
+	BigInt operator/(const BigInt & a, const BigInt & b)
+	{
+		int value;
+		uint_least64_t carry = 0;
+		uint_least32_t *r = nullptr;
+		size_t maxbits;
+		std::string str;
+		size_t idx = 0;
+		integer::BigInt t;
+
+		BigInt number_a;
+
+		std::string sa = a.toString();
+		size_t size_b = b.toString().size();
+
+		size_t begin_sa;
+		size_t end_sa;
+
+		
+		if (sa[0] == Magnitude::SIGNED) {
+			begin_sa = 1;
+			end_sa = size_b;
+			idx = size_b;
+		}
+		else {
+			begin_sa = 0;
+			end_sa = size_b - 1;
+			idx = size_b;
+		}
+		
+		std::string parcial_sa = "";
+
+		if (b == 0) {
+			std::cout << "ERROR: Division by zero!!!" << std::endl;
+			exit(-1);
+		}
+
+		if (a.nodes > b.nodes) {
+			while (end_sa < sa.size()) {
+				value = 9;
+				parcial_sa += sa.substr(begin_sa, idx);
+				number_a = parcial_sa;
+				//integer::BigInt m(b*value);
+				while (b*value > number_a)
+				{
+					value--;
+				}
+				if (value > 0) {
+					integer::BigInt m(b*value);
+					t = number_a - m;
+					if (t == 0) {
+						parcial_sa.clear();
+						end_sa += 1;
+						begin_sa = end_sa;
+					}
+					else {
+						parcial_sa.clear();
+						parcial_sa += t.toString();
+						//idx = size_b - t.size();
+						end_sa += 1;
+						begin_sa = end_sa;
+					}
+					idx = 1;
+				}
+				else {
+					parcial_sa.clear();
+					parcial_sa += t.toString();
+					end_sa++;
+					idx++;
+				}
+				
+				str += std::to_string(value);
+			}
+		}
+		else if (a.nodes < b.nodes) {
+			return integer::BigInt(0);
+		}
+		else {
+			if (a < b) {
+				return integer::BigInt(0);
+			}
+			else {
+				value = a.values_t[a.nodes - 1] / b.values_t[b.nodes - 1];
+				size_t j;
+				for (j = value; j <= value + 1; j++) {
+					if (b*j > a) {
+						str += std::to_string(j - 1);
+						break;
+					}
+				}
+			}
+		}
+
+		return integer::BigInt(str);
+	}
+
+	BigInt operator&(const BigInt & a, const BigInt & b)
+	{
+		BigInt r;
+		size_t i, j;
+		delete[] r.values_t;
+		if (a.nodes >= b.nodes) {
+			r.values_t = (uint_least32_t *)calloc(a.nodes, sizeof(uint_least32_t));
+			r.nodes = a.nodes;
+			for (i = 0; i < b.nodes; i++) {
+				r.values_t[i] = a.values_t[i] & b.values_t[i];
+			}
+			for (j = i; j < a.nodes; j++) {
+				r.values_t[j] = 0;
+			}
+		}
+		else {
+			r.values_t = (uint_least32_t *)calloc(b.nodes, sizeof(uint_least32_t));
+			r.nodes = b.nodes;
+			for (i = 0; i < a.nodes; i++) {
+				r.values_t[i] = a.values_t[i] & b.values_t[i];
+			}
+			for (j = i; j < b.nodes; j++) {
+				r.values_t[j] = 0;
+			}
+		}
+		return r;
+	}
+
+	BigInt operator<<(const BigInt & a, size_t b)
+	{
+		if (b == 0) {
+			return a;
+		}
+		return BigInt();
+	}
+
+	inline BigInt::~BigInt() {
 		//delete[] values_t;
 	}
 }
