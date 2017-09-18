@@ -667,6 +667,7 @@ namespace  integer {
 		uint_least32_t carry = 0;
 		uint_least32_t sum = 0;
 		size_t maxbits = 0;
+		integer::Magnitude m;
 		//char *strsum;
 		uint_least32_t *r = nullptr;
 
@@ -753,24 +754,6 @@ namespace  integer {
 			return integer::BigInt(r, a.signal, maxbits);
 		}
 		else {
-			return a - b;
-		}
-
-		
-	}
-
-	BigInt operator-(const BigInt & a, const BigInt & b)
-	{
-		uint_least32_t carry = 0;
-		uint_least32_t sum = 0;
-		uint_least32_t sub = 0;
-		size_t maxbits = 0;
-		integer::Magnitude m;
-		//char *strsum;
-		uint_least32_t *r = nullptr;
-
-
-		if (a.signal != b.signal) {
 			if (a.nodes >= b.nodes) {
 				maxbits = a.nodes;
 				r = new uint_least32_t[maxbits];
@@ -837,9 +820,175 @@ namespace  integer {
 
 			return integer::BigInt(r, m, maxbits);
 		}
+
+		
+	}
+
+	BigInt operator-(const BigInt & a, const BigInt & b)
+	{
+		uint_least32_t carry = 0;
+		uint_least32_t sum = 0;
+		uint_least32_t sub = 0;
+		size_t maxbits = 0;
+		integer::Magnitude m;
+		//char *strsum;
+		uint_least32_t *r = nullptr;
+
+
+		if (a.signal == b.signal) {
+			if (a.nodes >= b.nodes) {
+				maxbits = a.nodes;
+				r = new uint_least32_t[maxbits];
+				for (size_t i = 0; i < maxbits; i++) {
+					if (i < b.nodes) {
+						sum = b.values_t[i] + carry;
+						if (a.values_t[i] >= sum) {
+							r[i] = a.values_t[i] - sum;
+							carry = 0;
+						}
+						else {
+							r[i] = a.values_t[i] + LIMITS_MAX - sum;
+							carry = 1;
+						}
+					}
+					else {
+						if (carry == 0) {
+							r[i] = a.values_t[i];
+						}
+						else {
+							r[i] = a.values_t[i] - carry;
+							carry = 0;
+						}
+					}
+				}
+				m = a.signal;
+			}
+			else {
+				maxbits = b.nodes;
+				r = new uint_least32_t[maxbits];
+				for (size_t i = 0; i < maxbits; i++) {
+					if (i < a.nodes) {
+						sum = a.values_t[i] + carry;
+						if (b.values_t[i] >= sum) {
+							r[i] = b.values_t[i] - sum;
+							carry = 0;
+						}
+						else {
+							r[i] = b.values_t[i] + LIMITS_MAX - sum;
+							carry = 1;
+						}
+					}
+					else {
+						if (carry == 0) {
+							r[i] = b.values_t[i];
+						}
+						else {
+							r[i] = a.values_t[i] - carry;
+							carry = 0;
+						}
+					}
+				}
+				if (b.signal == integer::Magnitude::SIGNED) {
+					m = integer::Magnitude::UNSIGNED;
+				}
+				else
+				{
+					m = integer::Magnitude::SIGNED;
+				}
+			}
+			sum = 0;
+
+			if (r[maxbits - 1] == 0 && maxbits > 1) {
+				maxbits--;
+				r = (uint_least32_t *)realloc(r, maxbits * sizeof(uint_least32_t));
+				if (!r) {
+					exit(-1);
+				}
+			}
+
+			return integer::BigInt(r, m, maxbits);
+		}
 		else
 		{
-			return a + b;
+			if (a.nodes >= b.nodes) {
+				maxbits = a.nodes;
+				r = new uint_least32_t[maxbits];
+				for (size_t i = 0; i < maxbits; i++) {
+					if (i < b.nodes) {
+						sum = a.values_t[i] + b.values_t[i] + carry;
+						if (sum > LIMITS_NUM) {
+							carry = 1;
+							r[i] = sum - LIMITS_MAX;
+						}
+						else {
+							carry = 0;
+							r[i] = sum;
+						}
+					}
+					else {
+						if (carry == 0) {
+							r[i] = a.values_t[i];
+						}
+						else {
+							sum = a.values_t[i] + carry;
+							if (sum > LIMITS_NUM) {
+								carry = 1;
+								r[i] = sum - LIMITS_MAX;
+							}
+							else {
+								carry = 0;
+								r[i] = sum;
+							}
+						}
+					}
+				}
+			}
+			else {
+				maxbits = b.nodes;
+				r = new uint_least32_t[maxbits];
+				size_t i = 0;
+				for (i = 0; i < maxbits; i++) {
+					if (i < a.nodes) {
+						sum = a.values_t[i] + b.values_t[i] + carry;
+						if (sum > LIMITS_NUM) {
+							carry = 1;
+							r[i] = sum - LIMITS_MAX;
+						}
+						else {
+							carry = 0;
+							r[i] = sum;
+						}
+					}
+					else {
+						if (carry == 0) {
+							r[i] = b.values_t[i];
+						}
+						else {
+							sum = b.values_t[i] + carry;
+							if (sum > LIMITS_NUM) {
+								carry = 1;
+								r[i] = sum - LIMITS_MAX;
+							}
+							else {
+								carry = 0;
+								r[i] = sum;
+							}
+						}
+					}
+				}
+			}
+			sum = 0;
+
+			if (carry > 0) {
+				maxbits++;
+				//strsum += '1';
+				r = (uint_least32_t *)realloc(r, maxbits * sizeof(uint_least32_t));
+				if (!r) {
+					exit(-1);
+				}
+				r[maxbits - 1] = carry;
+			}
+			return integer::BigInt(r, a.signal, maxbits);
 		}
 	}
 
