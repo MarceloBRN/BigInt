@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <sstream>
 #include <cmath>
+#include <iostream>
 
 #pragma once
 
@@ -45,7 +46,7 @@ namespace  integer {
 
 		uint_least32_t* values_t;
 
-		std::string toString() const;
+		std::string to_string() const;
 		size_t getNumNodes() const;
 		size_t lenght() const;
 		size_t size() const;
@@ -114,7 +115,7 @@ namespace  integer {
 
 	};
 
-	BigInt::BigInt() {
+	inline BigInt::BigInt() {
 		this->signal = Magnitude::UNSIGNED;
 		this->nodes = 1;
 		this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
@@ -125,36 +126,62 @@ namespace  integer {
 	{
 		size_t size;
 		for (size = 0; num[size] != '\0'; size++);
-		if (num[0] == static_cast<char>(Magnitude::SIGNED)) {
-			this->signal = Magnitude::SIGNED;
+		if (num[0] == '-') {
+			if (size == 2 && num[1] == '0') {
+				this->signal = Magnitude::UNSIGNED;
+			}
+			else {
+				this->signal = Magnitude::SIGNED;
+			}
 		}
 		else {
 			this->signal = Magnitude::UNSIGNED;
 		}
 
-		this->nodes = static_cast<size_t>(ceil(static_cast<double>(size) / static_cast<double>(this->_archbits)));
-
-		this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
 		std::string s(num);
 		size_t i, j;
 
-		size_t v = size % this->_archbits;
 		if (this->signal == Magnitude::SIGNED) {
-			for (i = size, j = 0; i >= this->_archbits && j < this->nodes; i -= this->_archbits, j++)
-			{
-				this->values_t[j] = std::stoul(s.substr(i - this->_archbits, this->_archbits));
-			}
+			this->nodes = static_cast<size_t>(ceil(static_cast<double>(size - 1) / static_cast<double>(this->_archbits)));
+
+			this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
+
+			size_t v = (size - 1) % this->_archbits;
+
 			if (v) {
-				this->values_t[j] = std::stoul(s.substr(1, v - 1));
+				for (i = size, j = 0; i >= this->_archbits && j < this->nodes - 1; i -= this->_archbits, j++)
+				{
+					this->values_t[j] = std::stoul(s.substr(i - this->_archbits, this->_archbits));
+				}
+				this->values_t[j] = std::stoul(s.substr(1, v));
+			}
+			else {
+				for (i = size, j = 0; i >= this->_archbits && j < this->nodes; i -= this->_archbits, j++)
+				{
+					this->values_t[j] = std::stoul(s.substr(i - this->_archbits, this->_archbits));
+				}
 			}
 		}
 		else {
-			for (i = size, j = 0; i >= this->_archbits && j < this->nodes; i -= this->_archbits, j++)
-			{
-				this->values_t[j] = std::stoul(s.substr(i - this->_archbits, this->_archbits));
-			}
+			this->nodes = static_cast<size_t>(ceil(static_cast<double>(size) / static_cast<double>(this->_archbits)));
+
+			this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
+
+			size_t v = size % this->_archbits;
+
 			if (v) {
+				for (i = size, j = 0; i >= this->_archbits && j < this->nodes - 1; i -= this->_archbits, j++)
+				{
+					this->values_t[j] = std::stoul(s.substr(i - this->_archbits, this->_archbits));
+				}
+
 				this->values_t[j] = std::stoul(s.substr(0, v));
+			}
+			else {
+				for (i = size, j = 0; i >= this->_archbits && j < this->nodes; i -= this->_archbits, j++)
+				{
+					this->values_t[j] = std::stoul(s.substr(i - this->_archbits, this->_archbits));
+				}
 			}
 		}
 	}
@@ -163,25 +190,63 @@ namespace  integer {
 	{
 		size_t size;
 		for (size = 0; num[size] != '\0'; size++);
-		if (num[0] == static_cast<char>(Magnitude::SIGNED)) {
-			this->signal = Magnitude::SIGNED;
+
+		if (num[0] == '-') {
+			if (size == 2 && num[1] == '0') {
+				this->signal = Magnitude::UNSIGNED;
+			}
+			else {
+				this->signal = Magnitude::SIGNED;
+			}
 		}
 		else {
 			this->signal = Magnitude::UNSIGNED;
 		}
 
-		this->nodes = static_cast<size_t>(ceil(static_cast<double>(size) / static_cast<double>(this->_archbits)));
-
-		this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
 		size_t i, j;
-		for (i = num.size(), j = 0; i >= this->_archbits && j < this->nodes; i -= this->_archbits, j++)
-		{
-			this->values_t[j] = std::stoul(num.substr(i - this->_archbits, this->_archbits));
-		}
 
-		size_t v = num.size() % this->_archbits;
-		if (v) {
-			this->values_t[j] = std::stoul(num.substr(0, v));
+		if (this->signal == Magnitude::SIGNED) {
+			this->nodes = static_cast<size_t>(ceil(static_cast<double>(size - 1) / static_cast<double>(this->_archbits)));
+
+			this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
+
+			size_t v = (size - 1) % this->_archbits;
+
+			if (v) {
+				for (i = size, j = 0; i >= this->_archbits && j < this->nodes - 1; i -= this->_archbits, j++)
+				{
+					this->values_t[j] = std::stoul(num.substr(i - this->_archbits, this->_archbits));
+				}
+				this->values_t[j] = std::stoul(num.substr(1, v));
+			}
+			else {
+				for (i = size, j = 0; i >= this->_archbits && j < this->nodes; i -= this->_archbits, j++)
+				{
+					this->values_t[j] = std::stoul(num.substr(i - this->_archbits, this->_archbits));
+				}
+			}
+		}
+		else {
+			this->nodes = static_cast<size_t>(ceil(static_cast<double>(size) / static_cast<double>(this->_archbits)));
+
+			this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
+
+			size_t v = size % this->_archbits;
+
+			if (v) {
+				for (i = size, j = 0; i >= this->_archbits && j < this->nodes - 1; i -= this->_archbits, j++)
+				{
+					this->values_t[j] = std::stoul(num.substr(i - this->_archbits, this->_archbits));
+				}
+
+				this->values_t[j] = std::stoul(num.substr(0, v));
+			}
+			else {
+				for (i = size, j = 0; i >= this->_archbits && j < this->nodes; i -= this->_archbits, j++)
+				{
+					this->values_t[j] = std::stoul(num.substr(i - this->_archbits, this->_archbits));
+				}
+			}
 		}
 	}
 
@@ -189,7 +254,7 @@ namespace  integer {
 	{
 		this->signal = other.signal;
 		this->nodes = other.getNumNodes();
-		//std::cout << other.toString() << std::endl;
+		//std::cout << other.to_string() << std::endl;
 		this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
 		for (size_t i = 0; i < this->nodes; i++) {
 			this->values_t[i] = other.values_t[i];
@@ -259,7 +324,7 @@ namespace  integer {
 			if (str[0] == Magnitude::SIGNED) {
 				this->signal = Magnitude::SIGNED;
 				size_t idx = str.size() - SIZE_DOUBLE_LIMITS_NUM;
-				this->values_t[2] = std::stoul(str.substr(1, idx));
+				this->values_t[2] = std::stoul(str.substr(1, idx - 1));
 				this->values_t[1] = std::stoul(str.substr(idx, SIZE_LIMITS_NUM));
 				this->values_t[0] = std::stoul(str.substr(idx + SIZE_LIMITS_NUM, SIZE_LIMITS_NUM));
 			}
@@ -277,7 +342,7 @@ namespace  integer {
 			this->nodes = 2;
 			this->values_t = new uint_least32_t[this->nodes * sizeof(uint_least32_t)];
 			size_t idx = str.size() - SIZE_LIMITS_NUM;
-			this->values_t[1] = std::stoul(str.substr(1, idx));
+			this->values_t[1] = std::stoul(str.substr(1, idx - 1));
 			this->values_t[0] = std::stoul(str.substr(idx, SIZE_LIMITS_NUM));
 		}
 		else {
@@ -336,7 +401,7 @@ namespace  integer {
 		//}
 	}
 
-	inline std::string BigInt::toString() const
+	inline std::string BigInt::to_string() const
 	{
 		std::ostringstream stream;
 		bool first_node = true;
@@ -368,7 +433,7 @@ namespace  integer {
 	inline size_t BigInt::lenght() const
 	{
 		std::string r;
-		r = this->toString();
+		r = this->to_string();
 		if (r[0] != Magnitude::SIGNED) {
 			return r.size() - 1;
 		}
@@ -378,7 +443,7 @@ namespace  integer {
 	inline size_t BigInt::size() const
 	{
 		std::string r;
-		r = this->toString();
+		r = this->to_string();
 		if (r[0] != Magnitude::SIGNED) {
 			return r.size();
 		}
@@ -396,13 +461,13 @@ namespace  integer {
 	}
 
 	inline std::string BigInt::convertBase(const BigInt& num, int from, int to) {
-		std::string snum = num.toString();
+		std::string snum = num.to_string();
 
 		if (num == nullptr) {
 			return nullptr;
 		}
 
-		if (from < 2 || to < 2) { 
+		if (from < 2 || to < 2) {
 			return nullptr;
 		}
 
@@ -416,128 +481,6 @@ namespace  integer {
 
 		return sout;
 	}
-
-	//inline std::string BigInt::convertBase(const BigInt& num, int from, int to)
-	//{
-	//	//if (num == nullptr) {
-	//	//	return nullptr;
-	//	//}
-
-	//	if (from < 2 || from > 36 || to < 2 || to > 36) { 
-	//		return nullptr;
-	//	}
-
-	//	std::string s = num.toString();
-	//	size_t il = s.size();
-
-	//	//String of Values
-	//	int *fs = new int[il];
-	//	size_t k = 0;
-	//	size_t i, j;
-
-	//	for (i = il, k = 0; i >= 1; i--, k++)
-	//	{
-	//		if (s[i-1] >= '0' && s[i-1] <= '9')
-	//		{
-	//			fs[k] = s[i - 1] - '0';
-	//		}
-	//		else
-	//		{
-	//			if (s[i - 1] >= 'A' && s[i - 1] <= 'Z')
-	//			{
-	//				fs[k] = 10 + s[i - 1] - 'A';
-	//			}
-	//			else if (s[i - 1] >= 'a' && s[i - 1] <= 'z')
-	//			{
-	//				fs[k] = 10 + s[i - 1] - 'a';
-	//			}
-	//			else
-	//			{
-	//				delete[] fs;
-	//				return "Error: Input string must only contain any of [0 - 9] or [a- z] or [A - Z]";
-	//			}
-	//		}
-	//	}
-
-	//	for (i = 0; i < il; i++)
-	//	{
-	//		if (fs[i] >= from) {
-	//			return "Error: Not a valid number for this input base";
-	//		}
-	//	}
-
-	//	size_t ol = il * (from / to + 1);
-	//	//accumulation array
-	//	int *as = new int[ol + 10];
-	//	//result array
-	//	int *rs = new int[ol + 10];
-
-	//	for (i = 0;i<ol;i++)
-	//	{
-	//		as[i] = 0;
-	//		rs[i] = 0;
-	//	}
-	//	as[0] = 1;
-
-	//	//evaluate the output
-	//	for (int i = 0; i < il; i++) //for each input digit
-	//	{
-	//		for (int j = 0; j < ol; j++) //add the input digit 
-	//									 // times (base:to from^i) to the output cumulator
-	//		{
-	//			rs[j] += as[j] * fs[i];
-	//			int temp = rs[j];
-	//			int rem = 0;
-	//			int ip = j;
-	//			do // fix up any remainders in base:to
-	//			{
-	//				rem = temp / to;
-	//				rs[ip] = temp - rem*to;
-	//				ip++;
-	//				rs[ip] += rem;
-	//				temp = rs[ip];
-	//			} while (temp >= to);
-	//		}
-
-	//		//calculate the next power from^i) in base:to format
-	//		for (int j = 0; j < ol; j++)
-	//		{
-	//			as[j] = as[j] * from;
-	//		}
-	//		for (int j = 0;j<ol;j++) //check for any remainders
-	//		{
-	//			int temp = as[j];
-	//			int rem = 0;
-	//			int ip = j;
-	//			do  //fix up any remainders
-	//			{
-	//				rem = temp / to;
-	//				as[ip] = temp - rem * to; 
-	//				ip++;
-	//				as[ip] += rem;
-	//				temp = as[ip];
-	//			} while (temp >= to);
-	//		}
-	//	}
-
-	//	std::string sout; //initialize output string
-	//	bool first = false; //leading zero flag
-	//	for (int i = ol; i >= 0; i--)
-	//	{
-	//		if (rs[i] != 0) { first = true; }
-	//		if (!first) { continue; }
-	//		if (rs[i] < 10) { sout += (char)(rs[i] + '0'); }
-	//		else { sout += (char)(rs[i] + 'A' - 10); }
-	//	}
-	//	if (sout.empty()) { return "0"; } //input was zero, return 0
-	//													//return the converted string
-
-	//	delete[]as;
-	//	delete[]rs;
-	//	delete[]fs;
-
-	//	return sout;
-	//}
 
 	inline BigInt& BigInt::operator=(const BigInt &b)
 	{
@@ -568,11 +511,11 @@ namespace  integer {
 
 	std::ostream & operator<<(std::ostream & out, const BigInt & t)
 	{
-		out << t.toString();
+		out << t.to_string();
 		return out;
 	}
 
-	bool operator==(const BigInt & lhs, const BigInt & rhs)
+	inline bool operator==(const BigInt & lhs, const BigInt & rhs)
 	{
 		if (lhs.getNumNodes() != rhs.getNumNodes()) {
 			return false;
@@ -587,17 +530,17 @@ namespace  integer {
 		return true;
 	}
 
-	bool operator==(int & lhs, const BigInt & rhs)
+	inline bool operator==(int & lhs, const BigInt & rhs)
 	{
 		return integer::BigInt(lhs) == rhs;
 	}
 
-	bool operator==(const BigInt & lhs, int & rhs)
+	inline bool operator==(const BigInt & lhs, int & rhs)
 	{
 		return lhs == integer::BigInt(rhs);
 	}
 
-	bool operator!=(const BigInt & lhs, const BigInt & rhs)
+	inline bool operator!=(const BigInt & lhs, const BigInt & rhs)
 	{
 		if (lhs.getNumNodes() == rhs.getNumNodes()) {
 			return false;
@@ -612,17 +555,17 @@ namespace  integer {
 		return true;
 	}
 
-	bool operator!=(int & lhs, const BigInt & rhs)
+	inline bool operator!=(int & lhs, const BigInt & rhs)
 	{
 		return integer::BigInt(lhs) != rhs;
 	}
 
-	bool operator!=(const BigInt & lhs, int & rhs)
+	inline bool operator!=(const BigInt & lhs, int & rhs)
 	{
 		return lhs != integer::BigInt(rhs);
 	}
 
-	bool operator<(const BigInt & lhs, const BigInt & rhs)
+	inline bool operator<(const BigInt & lhs, const BigInt & rhs)
 	{
 		if (lhs.getNumNodes() > rhs.getNumNodes()) {
 			return false;
@@ -637,7 +580,7 @@ namespace  integer {
 		return true;
 	}
 
-	bool operator>(const BigInt & lhs, const BigInt & rhs)
+	inline bool operator>(const BigInt & lhs, const BigInt & rhs)
 	{
 		if (lhs.nodes < rhs.nodes) {
 			return false;
@@ -652,23 +595,24 @@ namespace  integer {
 		return true;
 	}
 
-	bool operator<=(const BigInt & lhs, const BigInt & rhs)
+	inline bool operator<=(const BigInt & lhs, const BigInt & rhs)
 	{
 		return (lhs < rhs) || (lhs == rhs);
 	}
 
-	bool operator>=(const BigInt & lhs, const BigInt & rhs)
+	inline bool operator>=(const BigInt & lhs, const BigInt & rhs)
 	{
 		return (lhs > rhs) || (lhs == rhs);
 	}
 
-	BigInt operator+(const BigInt &a, const BigInt &b)
+	inline BigInt operator+(const BigInt &a, const BigInt &b)
 	{
 		uint_least32_t carry = 0;
 		uint_least32_t sum = 0;
 		size_t maxbits = 0;
 		integer::Magnitude m;
 		//char *strsum;
+		bool signal = false;
 		uint_least32_t *r = nullptr;
 
 		if (a.signal == b.signal) {
@@ -751,6 +695,11 @@ namespace  integer {
 				}
 				r[maxbits - 1] = carry;
 			}
+			if (maxbits == 1) {
+				if (r[0] == 0) {
+					m = Magnitude::UNSIGNED;
+				}
+			}
 			return integer::BigInt(r, a.signal, maxbits);
 		}
 		else {
@@ -765,8 +714,15 @@ namespace  integer {
 							carry = 0;
 						}
 						else {
-							r[i] = a.values_t[i] + LIMITS_MAX - sum;
-							carry = 1;
+							if (a.nodes == 1 && a.nodes == b.nodes) {
+								r[i] = sum - a.values_t[i];
+								carry = 0;
+								signal = true;
+							}
+							else {
+								r[i] = a.values_t[i] + LIMITS_MAX - sum;
+								carry = 1;
+							}
 						}
 					}
 					else {
@@ -779,7 +735,17 @@ namespace  integer {
 						}
 					}
 				}
-				m = a.signal;
+				if (signal) {
+					m = Magnitude::SIGNED;
+				}
+				else {
+					m = a.signal;
+				}
+				if (maxbits == 1) {
+					if (r[0] == 0) {
+						m = Magnitude::UNSIGNED;
+					}
+				}
 			}
 			else {
 				maxbits = b.nodes;
@@ -792,8 +758,15 @@ namespace  integer {
 							carry = 0;
 						}
 						else {
-							r[i] = b.values_t[i] + LIMITS_MAX - sum;
-							carry = 1;
+							if (b.nodes == 1 && a.nodes == b.nodes) {
+								r[i] = sum - b.values_t[i];
+								carry = 0;
+								signal = true;
+							}
+							else {
+								r[i] = b.values_t[i] + LIMITS_MAX - sum;
+								carry = 1;
+							}
 						}
 					}
 					else {
@@ -806,7 +779,17 @@ namespace  integer {
 						}
 					}
 				}
-				m = b.signal;
+				if (signal) {
+					m = Magnitude::SIGNED;
+				}
+				else {
+					m = b.signal;
+				}
+				if (maxbits == 1) {
+					if (r[0] == 0) {
+						m = Magnitude::UNSIGNED;
+					}
+				}
 			}
 			sum = 0;
 
@@ -816,21 +799,26 @@ namespace  integer {
 				if (!r) {
 					exit(-1);
 				}
+				if (maxbits == 1) {
+					if (r[0] == 0) {
+						m = Magnitude::UNSIGNED;
+					}
+				}
 			}
-
 			return integer::BigInt(r, m, maxbits);
 		}
 
-		
+
 	}
 
-	BigInt operator-(const BigInt & a, const BigInt & b)
+	inline BigInt operator-(const BigInt & a, const BigInt & b)
 	{
 		uint_least32_t carry = 0;
 		uint_least32_t sum = 0;
 		uint_least32_t sub = 0;
 		size_t maxbits = 0;
 		integer::Magnitude m;
+		bool signal = false;
 		//char *strsum;
 		uint_least32_t *r = nullptr;
 
@@ -847,8 +835,15 @@ namespace  integer {
 							carry = 0;
 						}
 						else {
-							r[i] = a.values_t[i] + LIMITS_MAX - sum;
-							carry = 1;
+							if (a.nodes == 1 && a.nodes == b.nodes) {
+								r[i] = sum - a.values_t[i];
+								carry = 0;
+								signal = true;
+							}
+							else {
+								r[i] = a.values_t[i] + LIMITS_MAX - sum;
+								carry = 1;
+							}
 						}
 					}
 					else {
@@ -861,7 +856,18 @@ namespace  integer {
 						}
 					}
 				}
-				m = a.signal;
+				if (signal) {
+					m = Magnitude::SIGNED;
+				}
+				else {
+					m = a.signal;
+				}
+				
+				if (maxbits == 1) {
+					if (r[0] == 0) {
+						m = Magnitude::UNSIGNED;
+					}
+				}
 			}
 			else {
 				maxbits = b.nodes;
@@ -903,6 +909,11 @@ namespace  integer {
 				r = (uint_least32_t *)realloc(r, maxbits * sizeof(uint_least32_t));
 				if (!r) {
 					exit(-1);
+				}
+				if (maxbits == 1) {
+					if (r[0] == 0) {
+						m = Magnitude::UNSIGNED;
+					}
 				}
 			}
 
@@ -988,11 +999,16 @@ namespace  integer {
 				}
 				r[maxbits - 1] = carry;
 			}
+			if (maxbits == 1) {
+				if (r[0] == 0) {
+					m = Magnitude::UNSIGNED;
+				}
+			}
 			return integer::BigInt(r, a.signal, maxbits);
 		}
 	}
 
-	BigInt operator*(const BigInt & a, const BigInt & b)
+	inline BigInt operator*(const BigInt & a, const BigInt & b)
 	{
 		uint_least64_t value;
 		uint_least64_t carry = 0;
@@ -1023,7 +1039,7 @@ namespace  integer {
 		return integer::BigInt(r, integer::Magnitude::UNSIGNED, maxbits);
 	}
 
-	BigInt operator*(const BigInt & a, unsigned long & b)
+	inline BigInt operator*(const BigInt & a, unsigned long & b)
 	{
 		uint_least64_t value;
 		uint_least64_t carry = 0;
@@ -1052,7 +1068,7 @@ namespace  integer {
 		return integer::BigInt(r, integer::Magnitude::UNSIGNED, maxbits);
 	}
 
-	BigInt operator/(const BigInt & a, const BigInt & b)
+	inline BigInt operator/(const BigInt & a, const BigInt & b)
 	{
 		int value;
 		uint_least64_t carry = 0;
@@ -1064,13 +1080,13 @@ namespace  integer {
 
 		BigInt number_a;
 
-		std::string sa = a.toString();
-		size_t size_b = b.toString().size();
+		std::string sa = a.to_string();
+		size_t size_b = b.to_string().size();
 
 		size_t begin_sa;
 		size_t end_sa;
 
-		
+
 		if (sa[0] == Magnitude::SIGNED) {
 			begin_sa = 1;
 			end_sa = size_b;
@@ -1081,7 +1097,7 @@ namespace  integer {
 			end_sa = size_b - 1;
 			idx = size_b;
 		}
-		
+
 		std::string parcial_sa = "";
 
 		if (b == 0) {
@@ -1109,7 +1125,7 @@ namespace  integer {
 					}
 					else {
 						parcial_sa.clear();
-						parcial_sa += t.toString();
+						parcial_sa += t.to_string();
 						//idx = size_b - t.size();
 						end_sa += 1;
 						begin_sa = end_sa;
@@ -1118,11 +1134,11 @@ namespace  integer {
 				}
 				else {
 					parcial_sa.clear();
-					parcial_sa += t.toString();
+					parcial_sa += t.to_string();
 					end_sa++;
 					idx++;
 				}
-				
+
 				str += std::to_string(value);
 			}
 		}
@@ -1148,7 +1164,7 @@ namespace  integer {
 		return integer::BigInt(str);
 	}
 
-	BigInt operator&(const BigInt & a, const BigInt & b)
+	inline BigInt operator&(const BigInt & a, const BigInt & b)
 	{
 		BigInt r;
 		size_t i, j;
@@ -1186,13 +1202,38 @@ namespace  integer {
 		return r;
 	}
 
-	//BigInt operator<<(const BigInt & a, size_t b)
-	//{
-	//	if (b == 0) {
-	//		return a;
-	//	}
-	//	return BigInt();
-	//}
+	inline BigInt & integer::operator+=(BigInt & a, const BigInt & b)
+	{
+		return a + b;
+	}
+
+	inline BigInt & operator-=(BigInt & a, const BigInt & b)
+	{
+		return a - b;
+	}
+
+
+	inline BigInt & integer::operator++(BigInt & a)
+	{
+		return a + 1;
+	}
+
+	inline BigInt & operator--(BigInt & a)
+	{
+		return a - 1;
+	}
+
+	inline BigInt operator++(BigInt & a, int)
+	{
+		a = a + 1;
+		return a;
+	}
+
+	inline BigInt operator--(BigInt & a, int)
+	{
+		a = a - 1;
+		return a;
+	}
 
 	inline BigInt::~BigInt() {
 		//delete[] values_t;
