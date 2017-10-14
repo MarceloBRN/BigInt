@@ -1,0 +1,169 @@
+#include <iostream>
+#include "BigInt.h"
+
+
+int main() {
+
+	integer::BigInt mult1;
+	integer::BigInt mult2;
+	integer::BigInt resmult;
+
+	mult1 = BIGINT(1057409508754987827492837492834234234);
+	mult2 = BIGINT(3304709813274918274927491349824712);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "3494431580232818884249978564801600967717067940976866853464948649590608") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult1: " << resmult << std::endl;
+
+	mult1 = BIGINT(3304709813274918274927491349824712);
+	mult2 = BIGINT(1057409508754987827492837492834234234);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "3494431580232818884249978564801600967717067940976866853464948649590608") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult2: " << resmult << std::endl;
+
+	mult1 = BIGINT(-462736489164162419864913764197149641746197641);
+	mult2 = BIGINT(9843729487258795695423765265235982456);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "-4555052823215875807592717210946487583079872227906026567592636241739527712984586296") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult3: " << resmult << std::endl;
+
+	mult1 = BIGINT(462736489164162419864913764197149641746197641);
+	mult2 = BIGINT(-1057409508754987827492837492834234234);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "-489301963690084732277161812673590497923408930987156211029076409292269983452241994") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult4: " << resmult << std::endl;
+
+	mult1 = BIGINT(0);
+	mult2 = BIGINT(-1057409508754987827492837492834234234);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "0") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult5: " << resmult << std::endl;
+
+	mult1 = BIGINT(462736489164162419864913764197149641746197641);
+	mult2 = BIGINT(0);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "0") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult6: " << resmult << std::endl;
+
+	mult1 = BIGINT(162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641);
+	mult2 = BIGINT(1);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult7: " << resmult << std::endl;
+
+	mult1 = BIGINT(1);
+	mult2 = BIGINT(162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult8: " << resmult << std::endl;
+
+	mult1 = BIGINT(162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641);
+	mult2 = BIGINT(-1);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "-162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult9: " << resmult << std::endl;
+
+	mult1 = BIGINT(-1);
+	mult2 = BIGINT(-162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult10: " << resmult << std::endl;
+
+	mult1 = BIGINT(+0);
+	mult2 = BIGINT(-0);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "0") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult11: " << resmult << std::endl;
+
+	mult1 = BIGINT(162419864913416241976419714964174619764146273648916416244162419198649137641971496414162419746197641462736489164162419864913764197149641746197641);
+	mult2 = BIGINT(-0);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "0") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult12: " << resmult << std::endl;
+
+	mult1 = BIGINT(-1);
+	mult2 = BIGINT(1);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "-1") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult13: " << resmult << std::endl;
+
+	mult1 = BIGINT(1);
+	mult2 = BIGINT(1);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "1") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult14: " << resmult << std::endl;
+
+	mult1 = BIGINT(1);
+	mult2 = BIGINT(-1);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "-1") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult15: " << resmult << std::endl;
+
+	mult1 = BIGINT(-1);
+	mult2 = BIGINT(-1);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "1") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult16: " << resmult << std::endl;
+
+	mult1 = BIGINT(3916486419410416410264176241410746140164126486486347248752423858542154154185487485817);
+	mult2 = BIGINT(931024801247126412648162476249624864703624862384727342772734682648174261632881282821929319297291347914927391491849814798147918347);
+	resmult = mult1 * mult2;
+	if (resmult.to_string() != "3646345990218652714707481941285956084310077142499424236936510341411711017528842414167748627930084077469666313008768613414099565140927362916669133867591754859382188849140884642577648322194587157744402160257236584499") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult17: " << resmult << std::endl;
+
+	mult1 = BIGINT(3916486419410416410264176241410746140164126486486347248752423858542154154185487485817);
+	resmult = mult1 * 2338328;
+	if (resmult.to_string() != "9158029856127120183780210702225507200437701558892647389480757776297158239048242581735493976") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult18: " << resmult << std::endl;
+
+	mult1 = BIGINT(3916486419410416410264176241410746140164126486486347248752423858542154154185487485817);
+	resmult = -9874598375932 * mult1;
+	if (resmult.to_string() != "-38673730436469831685758476128514373800197021039385509887621681046708844316080801847732258084156444") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult19: " << resmult << std::endl;
+
+	mult1 = BIGINT(3916486419410416410264176241410746140164126486486347248752423858542154154185487485817);
+	resmult = mult1 * 0;
+	if (resmult.to_string() != "0") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "mult20: " << resmult << std::endl;
+
+	return 0;
+}

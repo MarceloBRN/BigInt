@@ -1,9 +1,10 @@
 #include <iostream>
+#include <ctime>
 #include "BigInt.h"
 
 int main() {
 
-		clock_t begin;
+	clock_t begin;
 	clock_t end;
 	double timeSec;
 
@@ -11,15 +12,15 @@ int main() {
 	integer::BigInt sum(0);
 	integer::BigInt fator1(BIGINT(999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999));
 
-	begin = clock();-1054104798941712909217910001484409522
+	begin = clock();
 	for (size_t i = 1; i <= itsum; i++) {
 		sum = sum + fator1;
 	}
 	end = clock();
 	timeSec = (end - begin) / static_cast<double>(CLOCKS_PER_SEC);
 	std::cout << "add: " << timeSec << std::endl;
-	std::cout << sum.to_string() << std::endl;
-	
+	//std::cout << sum << std::endl;
+
 	size_t itsub = 823456;
 	integer::BigInt sub(BIGINT(10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000));
 	integer::BigInt fator2(BIGINT(999999999));
@@ -31,7 +32,7 @@ int main() {
 	end = clock();
 	timeSec = (end - begin) / static_cast<double>(CLOCKS_PER_SEC);
 	std::cout << "sub: " << timeSec << std::endl;
-	//std::cout << sub.to_string() << std::endl;
+	//std::cout << sub << std::endl;
 
 	size_t itmult = 10000;
 	integer::BigInt mult(BIGINT(1));
@@ -44,7 +45,7 @@ int main() {
 	end = clock();
 	timeSec = (end - begin) / static_cast<double>(CLOCKS_PER_SEC);
 	std::cout << "mult: " << timeSec << std::endl;
-	std::cout << mult.to_string() << std::endl;
+	//std::cout << mult << std::endl;
 
 	size_t itmult2 = 10000;
 	integer::BigInt mult2(BIGINT(999999999));
@@ -57,7 +58,7 @@ int main() {
 	end = clock();
 	timeSec = (end - begin) / static_cast<double>(CLOCKS_PER_SEC);
 	std::cout << "mult2: " << timeSec << std::endl;
-	std::cout << mult2.to_string() << std::endl;
+	//std::cout << mult2 << std::endl;
 
 	size_t itdiv = 10;
 	integer::BigInt div(BIGINT(999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999));
@@ -72,11 +73,11 @@ int main() {
 	std::cout << "div: " << timeSec << std::endl;
 	std::cout << div.to_string() << std::endl;
 
-	std::cout << (BIGINT(1739551615) & BIGINT(480127440)).to_string() << std::endl;
+	//std::cout << (BIGINT(1739551615) & BIGINT(480127440)).to_string() << std::endl;
 
-	std::string out = integer::BigInt::convertBase(BIGINT(480127440), 10, 2);
+	//std::string out = integer::BigInt::convertBase(BIGINT(480127440), 10, 2);
 
-	std::cout << out << std::endl;
-	
+	//std::cout << out << std::endl;
+
 	return 0;
 }
