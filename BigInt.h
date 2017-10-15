@@ -9,7 +9,7 @@
 
 #pragma once
 
-#define BIGINT(A) integer::BigInt(#A)
+#define BIGINT(A) bnum::BigInt(#A)
 
 #define LIMITS_NUM 999999999
 #define LIMITS_MAX 1000000000
@@ -20,7 +20,7 @@
 #define SIZE_LIMITS_NUM 9
 #define SIZE_DOUBLE_LIMITS_NUM 18
 
-namespace  integer {
+namespace  bnum {
 
 	enum Magnitude {
 		UNSIGNED = '+',
@@ -43,8 +43,6 @@ namespace  integer {
 		BigInt(unsigned long num);
 		BigInt(long num);
 		BigInt(BigInt &&other);
-
-		uint_least32_t* values_t;
 
 		std::string to_string() const;
 		size_t get_num_nodes() const;
@@ -84,29 +82,8 @@ namespace  integer {
 
 		//arithmetic operators
 		friend BigInt operator+(const BigInt& a, const BigInt& b);
-		friend BigInt operator+(const BigInt& a, const int& b);
-		friend BigInt operator+(const BigInt& a, const unsigned int& b);
-		friend BigInt operator+(const BigInt& a, const long& b);
-		friend BigInt operator+(const BigInt& a, const unsigned long& b);
-		friend BigInt operator+(const BigInt& a, const long long& b);
-		friend BigInt operator+(const BigInt& a, const unsigned long long& b);
-		//--------------
 		friend BigInt operator-(const BigInt& a, const BigInt& b);
-		friend BigInt operator-(const BigInt& a, const int& b);
-		friend BigInt operator-(const BigInt& a, const unsigned int& b);
-		friend BigInt operator-(const BigInt& a, const long& b);
-		friend BigInt operator-(const BigInt& a, const unsigned long& b);
-		friend BigInt operator-(const BigInt& a, const long long& b);
-		friend BigInt operator-(const BigInt& a, const unsigned long long& b);
-		//--------------
 		friend BigInt operator*(const BigInt& a, const BigInt& b);
-		friend BigInt operator*(const BigInt& a, const int& b);
-		friend BigInt operator*(const BigInt& a, const unsigned int& b);
-		friend BigInt operator*(const BigInt& a, const long& b);
-		friend BigInt operator*(const BigInt& a, const unsigned long& b);
-		friend BigInt operator*(const BigInt& a, const long long& b);
-		friend BigInt operator*(const BigInt& a, const unsigned long long& b);
-		//--------------
 		friend BigInt operator/(const BigInt& a, const BigInt& b);
 		friend BigInt operator%(const BigInt& a, const BigInt& b);
 		friend BigInt operator~(const BigInt& a);
@@ -134,15 +111,34 @@ namespace  integer {
 
 		virtual ~BigInt();
 
-		Magnitude signal = Magnitude::UNSIGNED;
+		uint_least32_t* values_t;
 		size_t nodes = 0;
+		Magnitude signal = Magnitude::UNSIGNED;
+		
+		bool nan = false;
+		bool infinity = false;
 
 	private:
-
-		BigInt(uint_least32_t *values_t, Magnitude signal, size_t numnodes);
 		const size_t _archbits = 9;
+		BigInt(uint_least32_t *values_t, Magnitude signal, size_t numnodes);
 
 	};
+
+	static inline BigInt& powi(const BigInt& base, const BigInt& exponent) {
+		BigInt *p;
+		if (exponent == 1) {
+			p = new BigInt(base);
+			return *p;
+		}
+
+		p = new BigInt(1);
+		if (exponent != 0) {
+			for (BigInt i = 0; i < exponent; i++) {
+				*p = *p * base;
+			}
+		}
+		return *p;
+	}
 
 	inline BigInt::BigInt() {
 		this->signal = Magnitude::UNSIGNED;
@@ -428,25 +424,37 @@ namespace  integer {
 
 	inline std::string BigInt::to_string() const
 	{
+
 		std::ostringstream stream;
-		bool first_node = true;
-		if (!(this->nodes == 0)) {
-			for (size_t i = 0; i < this->nodes; i++)
-			{
-				if (first_node) {
-					if (this->signal == Magnitude::SIGNED) {
-						stream << '-';
+		if (this->nan) {
+			stream << "NaN";
+		}
+		else if(this->infinity){
+			stream << "Inf";
+		}
+		else {
+			bool first_node = true;
+
+			if (!(this->nodes == 0)) {
+				for (size_t i = 0; i < this->nodes; i++)
+				{
+					if (first_node) {
+						if (this->signal == Magnitude::SIGNED) {
+							stream << '-';
+						}
+						stream << this->values_t[this->nodes - i - 1];
+						first_node = false;
 					}
-					stream << this->values_t[this->nodes - i - 1];
-					first_node = false;
-				}
-				else {
-					stream.width(this->_archbits * sizeof(char));
-					stream.fill('0');
-					stream << this->values_t[this->nodes - i - 1];
+					else {
+						stream.width(this->_archbits * sizeof(char));
+						stream.fill('0');
+						stream << this->values_t[this->nodes - i - 1];
+					}
 				}
 			}
 		}
+
+		
 		return stream.str();
 	}
 
@@ -529,6 +537,8 @@ namespace  integer {
 
 	inline BigInt& BigInt::operator=(const BigInt &b)
 	{
+		this->nan = b.nan;
+		this->infinity = b.infinity;
 		this->nodes = b.nodes;
 		this->signal = b.signal;
 		delete[] this->values_t;
@@ -619,37 +629,37 @@ namespace  integer {
 
 	inline bool operator==(int & lhs, const BigInt & rhs)
 	{
-		return integer::BigInt(lhs) == rhs;
+		return bnum::BigInt(lhs) == rhs;
 	}
 
 	inline bool operator==(const BigInt & lhs, int & rhs)
 	{
-		return lhs == integer::BigInt(rhs);
+		return lhs == bnum::BigInt(rhs);
 	}
 
 	inline bool operator!=(const BigInt & lhs, const BigInt & rhs)
 	{
-		if (lhs.get_num_nodes() == rhs.get_num_nodes()) {
-			return false;
+		if (lhs.get_num_nodes() != rhs.get_num_nodes()) {
+			return true;
 		}
 		else {
 			for (size_t i = 0; i < lhs.get_num_nodes(); i++) {
-				if (lhs.values_t[i] == rhs.values_t[i]) {
-					return false;
+				if (lhs.values_t[i] != rhs.values_t[i]) {
+					return true;
 				}
 			}
 		}
-		return true;
+		return false;
 	}
 
 	inline bool operator!=(int & lhs, const BigInt & rhs)
 	{
-		return integer::BigInt(lhs) != rhs;
+		return bnum::BigInt(lhs) != rhs;
 	}
 
 	inline bool operator!=(const BigInt & lhs, int & rhs)
 	{
-		return lhs != integer::BigInt(rhs);
+		return lhs != bnum::BigInt(rhs);
 	}
 
 	inline bool operator<(const BigInt & lhs, const BigInt & rhs)
@@ -659,7 +669,7 @@ namespace  integer {
 		}
 		else if (lhs.get_num_nodes() == rhs.get_num_nodes()) {
 			for (size_t i = 0; i < lhs.get_num_nodes(); i++) {
-				if (lhs.values_t[i] > rhs.values_t[i]) {
+				if (lhs.values_t[i] >= rhs.values_t[i]) {
 					return false;
 				}
 			}
@@ -697,7 +707,7 @@ namespace  integer {
 		uint_least32_t carry = 0;
 		uint_least32_t sum = 0;
 		size_t maxbits = 0;
-		integer::Magnitude m;
+		bnum::Magnitude m;
 		bool signal = false;
 		uint_least32_t *r = nullptr;
 
@@ -786,7 +796,7 @@ namespace  integer {
 					m = Magnitude::UNSIGNED;
 				}
 			}
-			return integer::BigInt(r, a.signal, maxbits);
+			return bnum::BigInt(r, a.signal, maxbits);
 		}
 		else {
 			if (a.nodes >= b.nodes) {
@@ -891,38 +901,8 @@ namespace  integer {
 					}
 				}
 			}
-			return integer::BigInt(r, m, maxbits);
+			return bnum::BigInt(r, m, maxbits);
 		}
-	}
-
-	inline BigInt operator+(const BigInt & a, const int & b)
-	{
-		return a + BigInt(b);
-	}
-
-	inline BigInt operator+(const BigInt & a, const unsigned int & b)
-	{
-		return a + BigInt(b);
-	}
-
-	inline BigInt operator+(const BigInt & a, const long & b)
-	{
-		return a + BigInt(b);
-	}
-
-	inline BigInt operator+(const BigInt & a, const unsigned long & b)
-	{
-		return a + BigInt(b);
-	}
-
-	inline BigInt operator+(const BigInt & a, const long long & b)
-	{
-		return a + BigInt(b);
-	}
-
-	inline BigInt operator+(const BigInt & a, const unsigned long long & b)
-	{
-		return a + BigInt(b);
 	}
 
 	inline BigInt operator-(const BigInt & a, const BigInt & b)
@@ -930,7 +910,7 @@ namespace  integer {
 		uint_least32_t carry = 0;
 		uint_least32_t sum = 0;
 		size_t maxbits = 0;
-		integer::Magnitude m;
+		bnum::Magnitude m;
 		bool signal = false;
 		uint_least32_t *r = nullptr;
 
@@ -1006,12 +986,12 @@ namespace  integer {
 						}
 					}
 				}
-				if (b.signal == integer::Magnitude::SIGNED) {
-					m = integer::Magnitude::UNSIGNED;
+				if (b.signal == bnum::Magnitude::SIGNED) {
+					m = bnum::Magnitude::UNSIGNED;
 				}
 				else
 				{
-					m = integer::Magnitude::SIGNED;
+					m = bnum::Magnitude::SIGNED;
 				}
 			}
 			sum = 0;
@@ -1029,7 +1009,7 @@ namespace  integer {
 				}
 			}
 
-			return integer::BigInt(r, m, maxbits);
+			return bnum::BigInt(r, m, maxbits);
 		}
 		else
 		{
@@ -1115,38 +1095,8 @@ namespace  integer {
 					m = Magnitude::UNSIGNED;
 				}
 			}
-			return integer::BigInt(r, a.signal, maxbits);
+			return bnum::BigInt(r, a.signal, maxbits);
 		}
-	}
-
-	inline BigInt operator-(const BigInt & a, const int & b)
-	{
-		return a - BigInt(b);
-	}
-
-	inline BigInt operator-(const BigInt & a, const unsigned int & b)
-	{
-		return a - BigInt(b);
-	}
-
-	inline BigInt operator-(const BigInt & a, const long & b)
-	{
-		return a - BigInt(b);
-	}
-
-	inline BigInt operator-(const BigInt & a, const unsigned long & b)
-	{
-		return a - BigInt(b);
-	}
-
-	inline BigInt operator-(const BigInt & a, const long long & b)
-	{
-		return a - BigInt(b);
-	}
-
-	inline BigInt operator-(const BigInt & a, const unsigned long long & b)
-	{
-		return a - BigInt(b);
 	}
 
 	inline BigInt operator*(const BigInt & a, const BigInt & b)
@@ -1158,14 +1108,14 @@ namespace  integer {
 		uint_least64_t carry = 0;
 #endif
 
-		integer::Magnitude m;
+		bnum::Magnitude m;
 
 		size_t maxbits;
 		maxbits = a.nodes + b.nodes;
 		uint_least32_t *r = (uint_least32_t *)calloc(maxbits, sizeof(uint_least32_t));
 
 		if (a == 0 || b == 0) {
-			return integer::BigInt(0);
+			return bnum::BigInt(0);
 		}
 
 		size_t i = 0, j = 0;
@@ -1230,37 +1180,7 @@ namespace  integer {
 			m = Magnitude::SIGNED;
 		}
 
-		return integer::BigInt(r, m, maxbits);
-	}
-
-	inline BigInt operator*(const BigInt & a, const int & b)
-	{
-		return a * integer::BigInt(b);
-	}
-
-	inline BigInt operator*(const BigInt & a, const unsigned int & b)
-	{
-		return a * integer::BigInt(b);
-	}
-
-	inline BigInt operator*(const BigInt & a, const long & b)
-	{
-		return a * integer::BigInt(b);
-	}
-
-	inline BigInt operator*(const BigInt & a, const unsigned long & b)
-	{
-		return a * integer::BigInt(b);
-	}
-
-	inline BigInt operator*(const BigInt & a, const long long & b)
-	{
-		return a * integer::BigInt(b);
-	}
-
-	inline BigInt operator*(const BigInt & a, const unsigned long long & b)
-	{
-		return a * integer::BigInt(b);
+		return bnum::BigInt(r, m, maxbits);
 	}
 
 	inline BigInt operator/(const BigInt & a, const BigInt & b)
@@ -1268,7 +1188,7 @@ namespace  integer {
 		size_t value;
 		std::string str;
 		size_t idx = 0;
-		integer::BigInt t;
+		bnum::BigInt t;
 
 		BigInt number_a;
 
@@ -1293,8 +1213,10 @@ namespace  integer {
 		std::string parcial_sa = "";
 
 		if (b == 0) {
-			std::cout << "ERROR: Division by zero!!!" << std::endl;
-			exit(-1);
+			bnum::BigInt res = 0;
+			res.infinity = true;
+			//std::cout << "ERROR: Division by zero!!!" << std::endl;
+			return bnum::BigInt(res);
 		}
 
 		if (a.nodes > b.nodes) {
@@ -1302,13 +1224,13 @@ namespace  integer {
 				value = 9;
 				parcial_sa += sa.substr(begin_sa, idx);
 				number_a = parcial_sa;
-				//integer::BigInt m(b*value);
+				//bnum::BigInt m(b*value);
 				while (b*value > number_a)
 				{
 					value--;
 				}
 				if (value > 0) {
-					integer::BigInt m(b*value);
+					bnum::BigInt m(b*value);
 					t = number_a - m;
 					if (t == 0) {
 						parcial_sa.clear();
@@ -1335,11 +1257,11 @@ namespace  integer {
 			}
 		}
 		else if (a.nodes < b.nodes) {
-			return integer::BigInt(0);
+			return bnum::BigInt(0);
 		}
 		else {
 			if (a < b) {
-				return integer::BigInt(0);
+				return bnum::BigInt(0);
 			}
 			else {
 				value = a.values_t[a.nodes - 1] / b.values_t[b.nodes - 1];
@@ -1353,7 +1275,7 @@ namespace  integer {
 			}
 		}
 
-		return integer::BigInt(str);
+		return bnum::BigInt(str);
 	}
 
 	inline BigInt & operator+=(BigInt & a, const BigInt & b)

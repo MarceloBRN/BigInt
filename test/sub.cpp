@@ -6,9 +6,9 @@ int main() {
 	/* SUB TEST
 	*/
 
-	integer::BigInt sub1(BIGINT(1057409508754987827492837492834234234));
-	integer::BigInt sub2(BIGINT(3304709813274918274927491349824712));
-	integer::BigInt ressub1 = sub1 - sub2;
+	bnum::BigInt sub1(BIGINT(1057409508754987827492837492834234234));
+	bnum::BigInt sub2(BIGINT(3304709813274918274927491349824712));
+	bnum::BigInt ressub1 = sub1 - sub2;
 
 	if (ressub1.to_string() != "1054104798941712909217910001484409522") {
 		std::cout << "(WRONG)";
@@ -151,6 +151,6 @@ int main() {
 		std::cout << "(WRONG)";
 	}
 	std::cout << "sub: " << ressub1 << std::endl;
-	
+
 	return 0;
 }

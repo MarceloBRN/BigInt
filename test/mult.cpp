@@ -4,9 +4,9 @@
 
 int main() {
 
-	integer::BigInt mult1;
-	integer::BigInt mult2;
-	integer::BigInt resmult;
+	bnum::BigInt mult1;
+	bnum::BigInt mult2;
+	bnum::BigInt resmult;
 
 	mult1 = BIGINT(1057409508754987827492837492834234234);
 	mult2 = BIGINT(3304709813274918274927491349824712);

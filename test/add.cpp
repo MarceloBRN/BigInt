@@ -3,16 +3,9 @@
 
 int main() {
 
-	integer::BigInt mult1(BIGINT(1057409508754987827492837492834234234));
-	integer::BigInt sum2(BIGINT(3304709813274918274927491349824712));
-	integer::BigInt res1 = sum1 + sum2;#include <iostream>
-#include "BigInt.h"
-
-int main() {
-
-	integer::BigInt sum1(BIGINT(1057409508754987827492837492834234234));
-	integer::BigInt sum2(BIGINT(3304709813274918274927491349824712));
-	integer::BigInt res1 = sum1 + sum2;
+	bnum::BigInt sum1(BIGINT(1057409508754987827492837492834234234));
+	bnum::BigInt sum2(BIGINT(3304709813274918274927491349824712));
+	bnum::BigInt res1 = sum1 + sum2;
 
 	if (res1.to_string() != "1060714218568262745767764984184058946") {
 		std::cout << "(WRONG)";
@@ -167,23 +160,6 @@ int main() {
 		std::cout << "(WRONG)";
 	}
 	std::cout << "add18: " << res1 << std::endl;
-
-	return 0;
-}
-
-	if (res1.to_string() != "1060714218568262745767764984184058946") {
-		std::cout << "(WRONG)";
-	}
-	std::cout << "add1: " << res1 << std::endl;
-
-	sum1 = BIGINT(3304709813274918274927491349824712);
-	sum2 = BIGINT(1057409508754987827492837492834234234);
-	res1 = sum1 + sum2;
-
-	if (res1.to_string() != "1060714218568262745767764984184058946") {
-		std::cout << "(WRONG)";
-	}
-	std::cout << "add2: " << res1 << std::endl;
 
 	return 0;
 }
