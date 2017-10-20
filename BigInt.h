@@ -64,7 +64,6 @@ namespace  bnum {
 		BigInt& operator=(unsigned long num);
 		BigInt& operator=(long num);
 
-
 		//stream
 		friend std::ostream & operator<< (std::ostream &out, const BigInt &t);
 
@@ -114,7 +113,7 @@ namespace  bnum {
 		uint_least32_t* values_t;
 		size_t nodes = 0;
 		Magnitude signal = Magnitude::UNSIGNED;
-		
+
 		bool nan = false;
 		bool infinity = false;
 
@@ -137,6 +136,24 @@ namespace  bnum {
 				*p = *p * base;
 			}
 		}
+		return *p;
+	}
+
+	static inline BigInt& fat(const BigInt& n) {
+		BigInt *p = new BigInt(1);
+		if (n == 1 || n == 0) {
+			return *p;
+		}
+		else if (n > 1) {
+			for (BigInt i = n; i > 1; --i) {
+				*p = *p * i;
+			}
+		}
+		else {
+			std::cout << "FactorialError: Invalid number argument!\n";
+			p->nan = true;
+		}
+
 		return *p;
 	}
 
@@ -429,7 +446,7 @@ namespace  bnum {
 		if (this->nan) {
 			stream << "NaN";
 		}
-		else if(this->infinity){
+		else if (this->infinity) {
 			stream << "Inf";
 		}
 		else {
@@ -454,7 +471,7 @@ namespace  bnum {
 			}
 		}
 
-		
+
 		return stream.str();
 	}
 
@@ -623,6 +640,9 @@ namespace  bnum {
 					return false;
 				}
 			}
+			if (lhs.signal != rhs.signal) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -647,6 +667,9 @@ namespace  bnum {
 				if (lhs.values_t[i] != rhs.values_t[i]) {
 					return true;
 				}
+			}
+			if (lhs.signal != rhs.signal) {
+				return true;
 			}
 		}
 		return false;
@@ -679,15 +702,20 @@ namespace  bnum {
 
 	inline bool operator>(const BigInt & lhs, const BigInt & rhs)
 	{
-		if (lhs.nodes < rhs.nodes) {
-			return false;
-		}
-		else if (lhs.nodes == rhs.nodes) {
-			for (size_t i = 0; i < lhs.nodes; i++) {
-				if (lhs.values_t[i] <= rhs.values_t[i]) {
-					return false;
+		if (lhs.signal == lhs.signal) {
+			if (lhs.nodes < rhs.nodes) {
+				return false;
+			}
+			else if (lhs.nodes == rhs.nodes) {
+				for (size_t i = 0; i < lhs.nodes; i++) {
+					if (lhs.values_t[i] <= rhs.values_t[i]) {
+						return false;
+					}
 				}
 			}
+		}
+		else if (lhs.signal == Magnitude::SIGNED && lhs.signal == Magnitude::UNSIGNED) {
+			return false;
 		}
 		return true;
 	}
@@ -716,7 +744,7 @@ namespace  bnum {
 			if (a.nodes >= b.nodes) {
 				maxbits = a.nodes;
 				r = new uint_least32_t[maxbits];
-				for (int i = 0; i < maxbits; i++) {
+				for (size_t i = 0; i < maxbits; i++) {
 					if (i < b.nodes) {
 						sum = a.values_t[i] + b.values_t[i] + carry;
 						if (sum > LIMITS_NUM) {
@@ -750,7 +778,7 @@ namespace  bnum {
 				maxbits = b.nodes;
 				r = new uint_least32_t[maxbits];
 				size_t i = 0;
-				for (int i = 0; i < maxbits; i++) {
+				for (i = 0; i < maxbits; i++) {
 					if (i < a.nodes) {
 						sum = a.values_t[i] + b.values_t[i] + carry;
 						if (sum > LIMITS_NUM) {
@@ -1290,6 +1318,12 @@ namespace  bnum {
 		return a;
 	}
 
+	inline BigInt & operator*=(BigInt & a, const BigInt & b)
+	{
+		a = a * b;
+		return a;
+	}
+
 
 	inline BigInt & operator++(BigInt & a)
 	{
@@ -1305,14 +1339,12 @@ namespace  bnum {
 
 	inline BigInt operator++(BigInt & a, int)
 	{
-		a = a + 1;
-		return a;
+		return a + 1;
 	}
 
 	inline BigInt operator--(BigInt & a, int)
 	{
-		a = a - 1;
-		return a;
+		return a - 1;
 	}
 
 	inline BigInt::~BigInt() {
