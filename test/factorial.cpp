@@ -68,5 +68,12 @@ int main() {
 	res = bnum::fat(n);
 	std::cout << "fat8: " << res << std::endl;
 
+	n = BIGINT(99999999999);
+	res = bnum::fat(n);
+	if (res.to_string() != "Inf") {
+		std::cout << "(WRONG)";
+	}
+	std::cout << "fat9: " << res << std::endl;
+
 	return 0;
 }

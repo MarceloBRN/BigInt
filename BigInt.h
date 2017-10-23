@@ -45,6 +45,7 @@ namespace  bnum {
 		BigInt(BigInt &&other);
 
 		std::string to_string() const;
+		std::string to_exp_string() const;
 		size_t get_num_nodes() const;
 		size_t lenght() const;
 		size_t size() const;
@@ -66,6 +67,7 @@ namespace  bnum {
 
 		//stream
 		friend std::ostream & operator<< (std::ostream &out, const BigInt &t);
+		friend std::istream & operator>> (std::istream &is, const BigInt &t);
 
 		//comparison operators
 		friend bool operator==(const BigInt& lhs, const BigInt& rhs);
@@ -83,6 +85,7 @@ namespace  bnum {
 		friend BigInt operator+(const BigInt& a, const BigInt& b);
 		friend BigInt operator-(const BigInt& a, const BigInt& b);
 		friend BigInt operator*(const BigInt& a, const BigInt& b);
+		friend BigInt operator*(const BigInt& a, unsigned int& b);
 		friend BigInt operator/(const BigInt& a, const BigInt& b);
 		friend BigInt operator%(const BigInt& a, const BigInt& b);
 		friend BigInt operator~(const BigInt& a);
@@ -96,6 +99,7 @@ namespace  bnum {
 		friend BigInt& operator+=(BigInt& a, const BigInt& b);
 		friend BigInt& operator-=(BigInt& a, const BigInt& b);
 		friend BigInt& operator*=(BigInt& a, const BigInt& b);
+		friend BigInt& operator*=(BigInt& a, unsigned int& b);
 		friend BigInt& operator/=(BigInt& a, const BigInt& b);
 		friend BigInt& operator%=(BigInt& a, const BigInt& b);
 		friend BigInt& operator&=(BigInt& a, const BigInt& b);
@@ -140,21 +144,30 @@ namespace  bnum {
 	}
 
 	static inline BigInt& fat(const BigInt& n) {
-		BigInt *p = new BigInt(1);
+		BigInt p(1);
 		if (n == 1 || n == 0) {
-			return *p;
+			return *(new BigInt(p));
+		}
+		else if (n > LIMITS_NUM) {
+			p.infinity = true;
 		}
 		else if (n > 1) {
-			for (BigInt i = n; i > 1; --i) {
-				*p = *p * i;
+			for (uint_least32_t i = 2; i <= n.values_t[0]; ++i) {
+				p *= i;
 			}
 		}
 		else {
 			std::cout << "FactorialError: Invalid number argument!\n";
-			p->nan = true;
+			p.nan = true;
 		}
 
-		return *p;
+		return *(new BigInt(p));
+	}
+
+	static inline BigInt& abs(const BigInt& n) {
+		BigInt *a = new BigInt(n);
+		a->signal = Magnitude::UNSIGNED;
+		return *a;
 	}
 
 	inline BigInt::BigInt() {
@@ -301,6 +314,8 @@ namespace  bnum {
 		for (size_t i = 0; i < this->nodes; i++) {
 			this->values_t[i] = other.values_t[i];
 		}
+		this->nan = other.nan;
+		this->infinity = other.infinity;
 	}
 
 	inline BigInt::BigInt(unsigned int num)
@@ -429,6 +444,8 @@ namespace  bnum {
 		for (size_t i = 0; i < this->nodes; i++) {
 			this->values_t[i] = other.values_t[i];
 		}
+		this->nan = other.nan;
+		this->infinity = other.infinity;
 	}
 
 	inline BigInt::BigInt(uint_least32_t *values_t, Magnitude signal, size_t numnodes)
@@ -627,6 +644,14 @@ namespace  bnum {
 	{
 		out << t.to_string();
 		return out;
+	}
+
+	std::istream & operator>>(std::istream & is, BigInt & t)
+	{
+		std::string s;
+		is >> s;
+		t = s;
+		return is;
 	}
 
 	inline bool operator==(const BigInt & lhs, const BigInt & rhs)
@@ -1156,8 +1181,8 @@ namespace  bnum {
 #pragma warning( push )
 #pragma warning( disable : 4244)
 					carry = value / LIMITS_MAX;
-					r[j] = static_cast<uint_least32_t>(value - carry*LIMITS_MAX);
-#pragma warning( pop ) 
+					r[j] = static_cast<uint_least32_t>(value - (carry)*LIMITS_MAX);
+#pragma warning( pop )
 #elif __GNUC__ >= 5
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -1179,7 +1204,7 @@ namespace  bnum {
 #pragma warning( disable : 4244)
 					carry = value / LIMITS_MAX;
 					r[j] = static_cast<uint_least32_t>(value - (carry)*LIMITS_MAX);
-#pragma warning( pop ) 
+#pragma warning( pop )
 #elif __GNUC__ >= 5
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -1202,6 +1227,64 @@ namespace  bnum {
 		}
 
 		if (a.signal == b.signal) {
+			m = Magnitude::UNSIGNED;
+		}
+		else {
+			m = Magnitude::SIGNED;
+		}
+
+		return bnum::BigInt(r, m, maxbits);
+	}
+
+	BigInt operator*(const BigInt & a, unsigned int & b)
+	{
+		uint_least64_t value;
+#if _MSC_VER >= 1900
+		uint_least32_t carry = 0;
+#elif __GNUC__ >= 5
+		uint_least64_t carry = 0;
+#endif
+
+		bnum::Magnitude m;
+
+		size_t maxbits;
+		maxbits = a.nodes + 1;
+		uint_least32_t *r = (uint_least32_t *)calloc(maxbits, sizeof(uint_least32_t));
+
+		if (a == 0 || b == 0) {
+			return bnum::BigInt(0);
+		}
+
+		size_t j = 0;
+		carry = 0;
+		for (j = 0; j < a.nodes; j++) {
+			value = a.values_t[j] * (static_cast<uint_least64_t>(b)) + carry;
+#if _MSC_VER >= 1900
+#pragma warning( push )
+#pragma warning( disable : 4244)
+			carry = value / LIMITS_MAX;
+			r[j] = static_cast<uint_least32_t>(value - (carry)*LIMITS_MAX);
+#pragma warning( pop )
+#elif __GNUC__ >= 5
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+			carry = value / LIMITS_MAX;
+			r[j] = static_cast<uint_least32_t>(value - (carry)*LIMITS_MAX);
+#pragma GCC diagnostic pop
+#endif
+		}
+		r[j] += carry;
+
+		//r[maxbits - 1] = static_cast<uint_least32_t>(carry);
+		if (r[maxbits - 1] == 0) {
+			maxbits--;
+			r = (uint_least32_t *)realloc(r, maxbits * sizeof(uint_least32_t));
+			if (!r) {
+				exit(-1);
+			}
+		}
+
+		if (a.signal == BigInt(b).signal) {
 			m = Magnitude::UNSIGNED;
 		}
 		else {
@@ -1319,6 +1402,12 @@ namespace  bnum {
 	}
 
 	inline BigInt & operator*=(BigInt & a, const BigInt & b)
+	{
+		a = a * b;
+		return a;
+	}
+
+	inline BigInt & operator*=(BigInt & a, unsigned int & b)
 	{
 		a = a * b;
 		return a;

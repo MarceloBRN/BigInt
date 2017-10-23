@@ -47,19 +47,6 @@ int main() {
 	std::cout << "mult: " << timeSec << std::endl;
 	//std::cout << mult << std::endl;
 
-	size_t itmult2 = 10000;
-	bnum::BigInt mult2(BIGINT(999999999));
-	bnum::BigInt fator3_2(BIGINT(2));
-
-	begin = clock();
-	for (size_t i = 1; i <= itmult2; i++) {
-		mult2 = mult2 * fator3_2;
-	}
-	end = clock();
-	timeSec = (end - begin) / static_cast<double>(CLOCKS_PER_SEC);
-	std::cout << "mult2: " << timeSec << std::endl;
-	//std::cout << mult2 << std::endl;
-
 	size_t itdiv = 10;
 	bnum::BigInt div(BIGINT(999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999));
 	bnum::BigInt fator4(BIGINT(99999999999));
@@ -71,7 +58,16 @@ int main() {
 	end = clock();
 	timeSec = (end - begin) / static_cast<double>(CLOCKS_PER_SEC);
 	std::cout << "div: " << timeSec << std::endl;
-	std::cout << div.to_string() << std::endl;
+	//std::cout << div.to_string() << std::endl;
+
+	begin = clock();
+
+	bnum::BigInt n = BIGINT(99999);
+	bnum::BigInt res = bnum::fat(n);
+
+	end = clock();
+	timeSec = (end - begin) / static_cast<double>(CLOCKS_PER_SEC);
+	std::cout << "fact: " << timeSec << std::endl;
 
 	//std::cout << (BIGINT(1739551615) & BIGINT(480127440)).to_string() << std::endl;
 
